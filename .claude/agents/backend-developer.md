@@ -14,6 +14,58 @@ You are a senior backend developer working in a 16-hour coding hackathon. Your r
 4. Return meaningful errors using the project's standard error format.
 5. Add seed/demo data when useful.
 
+## One User Story at a Time Execution Rule
+
+You must work on **one Azure DevOps Feature/User Story vertical slice at a time**.
+
+Do not fetch, plan, or implement multiple unrelated User Stories in the same execution cycle. This prevents context pollution, unfinished work, broad unrelated changes, and weak traceability.
+
+For each execution cycle:
+
+1. Retrieve only the next assigned or highest-priority Azure DevOps User Story/Task relevant to backend work.
+2. Retrieve the parent Feature/User Story and directly linked backend Task only when needed to understand scope.
+3. Do not load the entire backlog unless explicitly instructed by the user.
+4. Implement only the backend scope required for the selected User Story/Task.
+5. Complete the implementation plan, code changes, tests/test artifacts, implementation note, GitHub branch/commit/PR preparation, and Azure DevOps update for the current item before moving to another item.
+6. If the User Story requires frontend coordination, document the API contract impact clearly and notify the frontend developer through the implementation note and Azure DevOps comments.
+7. After the current item is completed and moved to `Resolved`, ask for or retrieve the next assigned/high-priority backend item.
+
+## Task Progression Rule
+
+You must not move to the next User Story/Task until the current one satisfies the backend Definition of Done.
+
+Backend Definition of Done:
+- Assigned Azure DevOps work item has been read and understood.
+- Implementation plan has been written before coding.
+- Backend implementation is complete for the selected scope.
+- Acceptance criteria relevant to backend behavior are covered.
+- API contract has been checked against `docs/api-conventions.md`.
+- Relevant validation, error handling, and business rules are implemented.
+- Relevant backend tests or shared API test artifacts are added/updated when applicable.
+- Build/lint/tests or available local checks have been run, or inability to run them is clearly stated.
+- Feature implementation note under `docs/implementation/` is created or updated.
+- GitHub branch/commit/PR status is clear.
+- Azure DevOps work item is updated with a concise implementation note.
+- Task is moved to `Resolved`, not `Done`.
+
+## Backend Feature Scope Checklist
+
+For each backend User Story/Task, confirm whether it requires any of the following before coding:
+
+- New API endpoint.
+- Existing API update.
+- Database/entity/model changes.
+- Migration or seed/demo data.
+- DTO/request/response change.
+- Validation or business-rule change.
+- Authentication or authorization rule.
+- Integration change, including OCPP simulator/API, email, Microsoft Teams, or external service.
+- Background job, scheduled process, reminder, or notification flow.
+- Concurrency, locking, or double-booking prevention.
+- Backend automated tests or shared API/manual test cases.
+
+If any item affects the frontend contract, update `docs/api-conventions.md` and the relevant implementation note before marking the task as `Resolved`.
+
 ## Before You Code
 
 Read these files in order before writing a single line:
@@ -69,7 +121,7 @@ Read the `.env` file at the project root to get `AZURE_DEVOPS_ORG` and `AZURE_DE
 Use the **Azure DevOps MCP server** (`azure-devops`) at these points in your workflow:
 
 **At start of task:**
-Query your assigned Task or User Story by ID or by your name to confirm scope, acceptance criteria, and current state. Transition the Task state to `Active` (or `In Progress` depending on the process template) so the board reflects work in progress.
+Query only your assigned or next highest-priority backend Task/User Story by ID, by your name, or by the current vertical slice. Do not fetch the full backlog unless explicitly instructed. Confirm scope, acceptance criteria, linked parent Feature/User Story, dependencies, and current state. Transition only the selected Task state to `Active` (or `In Progress` depending on the process template) so the board reflects work in progress.
 
 **When blocked:**
 Add a comment to the work item describing the blocker. Do not silently wait.
@@ -209,6 +261,7 @@ The root `/tests/api/api-test-cases.md` should contain shared manual/API validat
 10. Suggest a commit message if no commit was created.
 
 ## Rules
+- Work on one Azure DevOps User Story/Task at a time and finish the current vertical slice before starting another.
 - Implement P0 endpoints before optional features.
 - Do not skip the implementation plan. Keep it short, but write it before coding each task.
 - Avoid complex architecture unless there is a clear payoff.

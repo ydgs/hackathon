@@ -19,7 +19,7 @@ The proposed solution is an **AI-powered EV charging orchestration platform**. I
 
 The web application must be **mobile-first and responsive**, because employee-facing actions such as checking availability, booking slots, receiving reminders, and releasing chargers are expected to be used heavily from mobile devices. Admin, Workplace, Security, and reporting views should also remain responsive, but may be optimized for tablet or desktop layouts where larger dashboards are useful.
 
-For the hackathon MVP, testing will be performed using **virtual OCPP chargers / simulator-based charging stations**. The solution should be OCPP-ready and simulator-friendly. OCPP data should flow through a backend ingestion/integration layer, update charger/session state, store energy consumption, power dashboards, and enable AI-generated operational and sustainability insights.
+For the hackathon MVP, testing will be performed using the **provided NexLevel CSMS/OCPP simulator and simulator-backed charging stations**. The solution should be OCPP-ready and simulator-friendly, but the custom application must **not** implement a custom OCPP server or raw OCPP protocol layer. Charging infrastructure data should be consumed through the provided CSMS REST API, then mapped into the platform’s booking, notification, reporting, dashboard, and AI insight layers.
 
 ---
 
@@ -104,8 +104,8 @@ The product should provide a future-ready EV charging platform that supports:
 - Fair access to chargers.
 - Real-time operational visibility.
 - Structured reservation and session management.
-- OCPP-enabled virtual charger integration.
-- Contactless authentication via OCPP-style handshake.
+- Integration with the provided NexLevel CSMS/OCPP simulator.
+- Booking-to-RFID/tag authorization using the provided CSMS REST API.
 - Energy consumption capture.
 - Eligible EV user management.
 - Privacy acknowledgement and data transparency.
@@ -115,7 +115,7 @@ The product should provide a future-ready EV charging platform that supports:
 
 The solution must be positioned as an **EV charging orchestration platform**, not simply as a charger booking app.
 
-The platform should be designed so that simulator/virtual charger testing can later be replaced by real OCPP charger integration without rewriting the booking, reporting, or AI layers.
+The platform should be designed so that the provided simulator-backed CSMS can later be replaced or extended with real OCPP charger infrastructure without rewriting the booking, reporting, notification, or AI layers.
 
 ---
 
@@ -124,6 +124,14 @@ The platform should be designed so that simulator/virtual charger testing can la
 > An intelligent EV charging orchestration platform for fair access, real-time operational visibility, OCPP-enabled consumption capture, ESG-ready sustainability reporting, and responsible AI-powered energy insights.
 
 This positioning should be used consistently in demos, documentation, presentation material, and jury-facing explanations.
+
+### 6.1 Provided CSMS / OCPP Simulator Constraint
+
+The hackathon provides a NexLevel CSMS with OCPP 1.6J support, simulator-backed charge points, charging sessions, meter values, energy tracking, and REST APIs.
+
+The product must **not** implement a custom OCPP server, custom OCPP WebSocket protocol handling, or raw OCPP message ingestion. All charging infrastructure interactions for the MVP must go through the provided CSMS REST API.
+
+The custom application remains responsible for the business layer: bookings, users, eligibility, fair-use rules, reminders, reporting, sustainability dashboards, RBAC, privacy acknowledgement, and responsible AI insights.
 
 ---
 
@@ -167,7 +175,7 @@ The application must satisfy the following BRD requirements:
 | **BR001** | Provide both a user interface and an administrator interface. |
 | **BR002** | Enforce a maximum charging time of one hour per user per day. |
 | **BR003** | Show real-time charger availability filtered by site/location and time slot. |
-| **BR004** | Integrate with virtual chargers using OCPP to retrieve session and energy data and create contactless authentications using Workplace registry EID, Parking Slot, and Badge. |
+| **BR004** | Integrate with the provided NexLevel CSMS REST API, backed by the OCPP 1.6J simulator, to retrieve station status, charging sessions, meter values, and energy data, and to authorize booking windows using RFID/tag-based authorization. |
 | **BR005** | Record energy consumption and usage data mapped to each specific user and to the make/model of the car. |
 | **BR006** | Maintain and manage a database of eligible EV users. |
 | **BR007** | Deliver a user-friendly reservation system across the two sites. |
@@ -250,103 +258,116 @@ Each charger should display a clear current status.
 - Users can quickly see which chargers are free, reserved, charging, blocked, unavailable, or faulted.
 - Security/admin users can view active sessions and today’s bookings.
 - Facilities users can monitor charger state across both locations.
-- Charger status should update from backend events, not from manual UI-only changes.
+- Charger status should update from backend data retrieved from the provided CSMS REST API, not from manual UI-only changes.
 - The dashboard should support real-time or near-real-time updates for demo purposes.
 - Employee-facing availability views should be optimized for mobile screens.
 - Admin/facilities dashboard views should remain responsive but can use wider layouts on tablet or desktop.
 
 ---
 
-### 10.3 OCPP Virtual Charger Integration and Consumption Capture
+### 10.3 Provided CSMS/OCPP Simulator Integration and Consumption Capture
 
-The platform must integrate with **virtual chargers using OCPP — Open Charge Point Protocol**.
+The platform must integrate with the **provided NexLevel CSMS**, which already handles OCPP 1.6J communication with simulator-backed charge points.
 
-The OCPP integration should retrieve:
+The custom application must **not** implement:
 
-- Charging session data.
-- Energy consumption data.
-- Charger status updates.
-- Start and end of charging transactions.
+- A custom OCPP WebSocket server.
+- Raw OCPP protocol handlers.
+- `BootNotification`, `StatusNotification`, `Authorize`, `StartTransaction`, `MeterValues`, or `StopTransaction` handlers.
+- A separate raw telemetry ingestion/normalization layer for OCPP payloads.
 
-Testing is expected to be conducted using a simulator or virtual charging stations.
+The custom application must integrate with the provided CSMS through REST APIs and focus on business value: booking, fair-use rules, reminders, reporting, sustainability dashboards, privacy/RBAC, and responsible AI insights.
 
-#### Contactless Authentication / OCPP Handshake
+#### Provided CSMS Responsibilities
 
-The solution should support a contactless authentication concept using an OCPP-style handshake based on:
+The provided NexLevel CSMS is responsible for:
 
-- Workplace registry EID.
-- Parking slot.
-- Badge.
+- OCPP 1.6J communication with charge points.
+- Simulator-backed charge-point connectivity.
+- Station and connector state tracking.
+- RFID/tag authorization validation.
+- Charging session creation and closure.
+- Meter-value persistence.
+- Energy consumption calculation.
+- REST API exposure for participant applications.
 
-The handshake should validate that the user is eligible and has a valid booking before a charging session is started.
+#### Custom Application Responsibilities
 
-#### OCPP-Ready Integration Architecture
+The custom platform is responsible for:
 
-```text
-OCPP virtual charger / simulator
-→ OCPP or OCPP-style telemetry ingestion layer
-→ Contactless authentication / authorization validation
-→ Normalized charging event model
-→ Charging session service
-→ Energy consumption storage
-→ Real-time availability update
-→ Reporting and AI insights
-```
+- Maintaining users, eligibility, vehicles, privacy acknowledgement, roles, and bookings.
+- Enforcing fair-use booking rules, including one hour per user per day.
+- Creating RFID/tag authorization windows in the CSMS when a booking is confirmed.
+- Revoking RFID/tag authorization in the CSMS when a booking is cancelled or released.
+- Reading station and connector status from the CSMS.
+- Reading active and historical charging sessions from the CSMS.
+- Reading session details, meter values, and energy consumption from the CSMS.
+- Mapping CSMS session/energy data to local bookings, users, vehicles, reports, and AI insights.
+- Handling synchronization failures between the local booking database and the CSMS.
 
-#### Supported OCPP-Style Events
+#### Required CSMS REST API Usage
 
-| Event | Purpose |
-|---|---|
-| **BootNotification** | Charger comes online and announces itself. |
-| **StatusNotification** | Charger status changes, such as Available, Reserved, Charging, Faulted, or Unavailable. |
-| **Authorize / Authentication Handshake** | Validates EID, badge, parking slot, and eligibility/booking context. |
-| **StartTransaction** | A charging session starts. |
-| **MeterValues** | Energy consumption values are received during an active session. |
-| **StopTransaction** | A charging session ends. |
+The application should use the provided CSMS REST API at the configured CSMS base URL.
 
-#### Architecture Rules
+| Purpose | Method | Endpoint |
+|---|---|---|
+| Get all stations and live connection status | `GET` | `/api/stations` |
+| Get one station and connectors | `GET` | `/api/stations/:identity` |
+| Get sessions with filters | `GET` | `/api/sessions?station=&idTag=&status=&from=&to=` |
+| Get active charging sessions | `GET` | `/api/sessions/active` |
+| Get session details and meter values | `GET` | `/api/sessions/:id` |
+| Authorize an RFID/tag booking window | `POST` | `/api/auth/tags` |
+| Revoke an RFID/tag authorization | `DELETE` | `/api/auth/tags/:idTag` |
+| Get active authorizations | `GET` | `/api/auth/tags?active=true` |
+| Trigger remote start, if required | `POST` | `/api/stations/:id/remote-start` |
+| Trigger remote stop, if required | `POST` | `/api/stations/:id/remote-stop` |
+| Block connector for maintenance | `PUT` | `/api/stations/:id/connectors/:n/block` |
+| Unblock connector after maintenance | `DELETE` | `/api/stations/:id/connectors/:n/block` |
 
-- The UI must not directly fake charger state transitions.
-- Virtual charger/simulator events should flow through a backend ingestion or integration layer.
-- Raw OCPP or simulated telemetry should be converted into an internal normalized event structure.
-- Booking, reporting, and AI layers should depend on normalized data, not raw OCPP payloads.
-- The virtual charger/simulator should be replaceable by real OCPP integration in a future version.
-- If real OCPP endpoints/credentials are not available during implementation, a simulator/fallback scenario must be used.
+#### Booking-to-CSMS Authorization Flow
 
-#### Example Normalized Telemetry Event
-
-```json
-{
-  "chargerId": "NEX-TOWER-CH-01",
-  "connectorId": 1,
-  "eventType": "MeterValues",
-  "transactionId": "TX-1001",
-  "userEid": "E12345",
-  "badgeId": "B98765",
-  "parkingSlot": "P-12",
-  "status": "Charging",
-  "energyKWh": 4.8,
-  "powerKW": 7.2,
-  "timestamp": "2026-05-21T09:30:00Z",
-  "source": "OCPP-Simulator"
-}
-```
-
-#### Required Demo Lifecycle
-
-The simulator/virtual charger scenario should support the following full charging lifecycle:
+When a booking is confirmed, the backend should create an authorization window in the CSMS.
 
 ```text
-Available
-→ Reserved
-→ Authentication handshake
-→ Charging started
-→ Meter values received
-→ Charging stopped
-→ Available
+User creates valid booking
+→ Custom backend validates eligibility, conflicts, and one-hour daily limit
+→ Custom backend creates local booking
+→ Custom backend calls POST /api/auth/tags
+→ CSMS authorizes the RFID/tag for the booking window
+→ Booking stores CSMS authorization sync status
 ```
 
-A fallback pre-recorded telemetry scenario should be prepared for demo reliability.
+If the CSMS authorization call fails, the booking must not silently appear fully confirmed. The booking should store a clear synchronization status such as `AuthorizationPending`, `Authorized`, `AuthorizationFailed`, or `Revoked`.
+
+#### Cancellation / Release Flow
+
+When a booking is cancelled or released, the backend should revoke the related CSMS authorization.
+
+```text
+User/admin cancels or releases booking
+→ Custom backend updates local booking state
+→ Custom backend calls DELETE /api/auth/tags/:idTag
+→ Booking stores CSMS revocation status
+→ Availability and reporting views update accordingly
+```
+
+#### Simulator Demo Lifecycle
+
+The provided simulator/CSMS scenario should support this full lifecycle:
+
+```text
+Booking confirmed
+→ RFID/tag authorization created in CSMS
+→ Simulator starts charge point session
+→ CSMS reports active session
+→ CSMS captures meter values
+→ CSMS closes session
+→ Custom app displays updated energy/reporting data
+```
+
+The custom app should not fake charger state transitions in the UI. It should show station, session, and energy data retrieved from the backend, which in turn integrates with the provided CSMS REST API.
+
+A fallback pre-recorded or seeded session scenario should still be prepared for demo reliability if the live simulator cannot be started.
 
 ---
 
@@ -593,11 +614,11 @@ The MVP should support a clear end-to-end story that can be shown to the hackath
 5. The user books a valid one-hour charging slot.
 6. The system enforces the one-hour-per-user-per-day rule.
 7. The user receives a reminder before the session begins.
-8. The user starts the charging session through a simulated OCPP/contactless authentication handshake using EID, parking slot, and badge.
-9. The charger status changes to Charging.
-10. OCPP simulator/virtual charger sends MeterValues during the session.
-11. The system records energy consumption against the user and vehicle.
-12. The session ends through StopTransaction.
+8. The system creates a valid RFID/tag authorization window in the provided CSMS for the booked slot.
+9. The provided simulator starts a charging session using the authorized RFID/tag.
+10. The charger/session status changes to Charging in the CSMS and is reflected in the application.
+11. The CSMS captures meter values and energy consumption during the session.
+12. The application retrieves the completed session and records/maps energy consumption against the booking, user, and vehicle.
 13. The user receives a notification to move the vehicle.
 14. The charger becomes available again.
 15. Admins can view bookings, sessions, charger status, maintenance blocks, and reports.
@@ -625,11 +646,11 @@ The MVP should prioritize a polished, working product over unnecessary infrastru
 - Admin/security/workplace manual release or override based on role permissions.
 - Admin booking creation, modification, cancellation, and booking on behalf of users.
 - Admin charger blocking for maintenance.
-- OCPP virtual charger / simulator integration.
-- Contactless authentication concept using Workplace registry EID, parking slot, and badge.
-- Backend ingestion/normalization of OCPP or OCPP-style telemetry.
-- Charger/session state updates.
-- Consumption tracking through MeterValues.
+- Integration with the provided NexLevel CSMS REST API.
+- Use of provided simulator-backed charge points.
+- Booking-to-RFID/tag authorization using CSMS authorization endpoints.
+- Retrieval of station status, active sessions, historical sessions, meter values, and energy consumption from the CSMS.
+- Local mapping of CSMS sessions/energy data to bookings, eligible users, vehicles, reports, and AI insights.
 - Vehicle make/model capture.
 - Reporting and sustainability dashboard.
 - Responsible AI insights based on collected or simulated data.
@@ -680,8 +701,8 @@ The MVP should prioritize a polished, working product over unnecessary infrastru
 
 The solution should consider these assumptions:
 
-- OCPP endpoints and credentials will be made available.
-- Access to virtual OCPP charging stations will be provided to teams.
+- The provided NexLevel CSMS/OCPP simulator and REST API will be available to teams.
+- The application will not connect directly to raw OCPP endpoints; it will integrate through the provided CSMS REST API.
 - EV user data already exists and is ready for integration.
 - Application testing will be conducted using a simulator.
 - External BI tools may be used for final reporting.
@@ -691,7 +712,7 @@ The solution should consider these assumptions:
 - Authentication may be simplified for the MVP.
 - The number of chargers and charger IDs at each location are known and fixed for the MVP.
 - Charger capacity and connector types are uniform enough not to require complex compatibility rules.
-- Meter values are generated by the simulator/virtual charger or fallback script.
+- Meter values are generated by the provided simulator/CSMS or fallback script and retrieved through REST APIs.
 - No payment or billing integration is required.
 - CO₂ savings estimates use a fixed kgCO₂/kWh coefficient.
 - Real-time dashboard updates may be implemented using SignalR, polling, WebSockets, or another suitable mechanism.
@@ -706,14 +727,14 @@ The solution should consider these assumptions:
 
 The main dependencies are:
 
-- Access to virtual OCPP charging stations or a simulator.
-- OCPP endpoints and credentials.
+- Access to the provided NexLevel CSMS REST API and OCPP simulator.
+- Ability to start the provided CSMS, database, and charge-point simulator during development/demo.
 - EV user data / eligible user registry.
 - Availability of authorized AI tools and credits.
 - Access to any required notification channels if implementing real email or Teams delivery.
 - Access to external BI tools, if used for final reporting.
 
-The system should be designed so that the simulator can be used during development and demo, while the architecture remains compatible with future real OCPP charger integration.
+The system should be designed so that the provided CSMS simulator can be used during development and demo, while the architecture remains compatible with future real OCPP charger integration behind the CSMS boundary.
 
 ---
 
@@ -733,7 +754,7 @@ The following domain concepts should guide analysis, architecture, database desi
 | **Vehicle** | EV associated with a user, including make and model. |
 | **Booking** | User reservation for a charger during a defined one-hour slot. |
 | **Charging Session** | Actual charging transaction linked to a booking, charger, connector, user, vehicle, and telemetry events. |
-| **OCPP Event / Telemetry Event** | Event generated by a virtual charger/simulator and normalized internally. |
+| **CSMS Event / Telemetry Data** | Station, session, status, or meter-value data retrieved from the provided CSMS REST API. Raw OCPP events are handled by the provided CSMS, not by the custom application. |
 | **Meter Reading** | Energy/power reading received during a charging session. |
 | **Notification** | In-app, email, or Microsoft Teams Adaptive Card reminder/alert related to booking/session lifecycle. |
 | **AI Insight** | Forecast, pattern, summary, anomaly, or recommendation generated from platform data. |
@@ -775,6 +796,25 @@ The following domain concepts should guide analysis, architecture, database desi
 
 ## 18. Suggested API and Integration Areas
 
+The implementation should consider APIs or service operations for the custom application, while recognizing that charging infrastructure data comes from the provided CSMS REST API.
+
+The custom backend should expose frontend-friendly endpoints where needed, but internally it should wrap the CSMS REST API rather than exposing raw OCPP concepts to the frontend.
+
+Core provided CSMS endpoints to wrap or consume:
+
+- `GET /api/stations`
+- `GET /api/stations/:identity`
+- `GET /api/sessions`
+- `GET /api/sessions/active`
+- `GET /api/sessions/:id`
+- `POST /api/auth/tags`
+- `DELETE /api/auth/tags/:idTag`
+- `GET /api/auth/tags?active=true`
+- `POST /api/stations/:id/remote-start`, if needed
+- `POST /api/stations/:id/remote-stop`, if needed
+- `PUT /api/stations/:id/connectors/:n/block`
+- `DELETE /api/stations/:id/connectors/:n/block`
+
 The implementation should consider APIs or service operations for:
 
 - User/session context.
@@ -790,11 +830,12 @@ The implementation should consider APIs or service operations for:
 - Admin/security/workplace override.
 - Admin booking on behalf of users.
 - Maintenance block creation/removal.
-- OCPP/virtual charger integration.
-- Contactless authentication handshake validation using EID, parking slot, and badge.
-- Telemetry ingestion.
-- Charging session lifecycle management.
-- Meter value storage.
+- Provided CSMS REST API integration.
+- Booking-to-RFID/tag authorization and revocation.
+- Station status retrieval.
+- Active and historical charging session retrieval.
+- Meter value and energy consumption retrieval.
+- Optional remote start/stop integration where required by the final demo journey.
 - Dashboard metrics retrieval.
 - Reporting metrics retrieval.
 - AI insight generation.
@@ -889,8 +930,8 @@ Design expectations:
 | **Eligible user control** | Only eligible EV users can book charging slots. |
 | **Mobile usability** | Employee-facing flows are usable on mobile devices, including availability checks, booking, reminders, privacy acknowledgement, and slot release. |
 | **Notification channels** | The MVP demonstrates in-app reminders and either implements or previews/generated outputs for email and Microsoft Teams Adaptive Card notifications. |
-| **OCPP-ready architecture** | Virtual charger/simulator telemetry flows through backend ingestion, normalization, state update, storage, dashboard, reporting, and AI layers. |
-| **Contactless authentication** | The demo shows or explains the EID, parking slot, and badge handshake concept. |
+| **OCPP-ready architecture** | Provided CSMS station, session, and meter-value data is consumed through REST API integration and mapped into the application’s booking, dashboard, reporting, and AI layers. |
+| **CSMS authorization flow** | The demo shows booking-to-RFID/tag authorization through the provided CSMS and explains how this can map to EID, parking slot, and badge concepts in a future enterprise integration. |
 | **Reporting completeness** | At least 8 defined reporting metrics are populated and displayed correctly. |
 | **Sustainability value** | Energy usage and estimated sustainability impact are visible and understandable. |
 | **AI credibility** | AI insights are grounded in available data, do not fabricate metrics, and disclose simulated data where applicable. |
@@ -931,15 +972,15 @@ This brief should be treated as the source of truth for all downstream implement
 - Acceptance criteria.
 - Initial backlog/user story breakdown.
 - Privacy acknowledgement requirements.
-- OCPP virtual charger / simulator interaction requirements.
+- Provided CSMS REST API and simulator interaction requirements.
 - Clarified MVP scope and assumptions.
 
 ### Solution Architect Should Produce
 
 - High-level architecture.
 - Backend/frontend integration flow.
-- OCPP virtual charger / simulator architecture.
-- Contactless authentication flow using EID, parking slot, and badge.
+- Provided CSMS integration architecture.
+- Booking-to-RFID/tag authorization flow using the CSMS REST API.
 - Data model proposal.
 - API boundary proposal.
 - Real-time update strategy.
@@ -954,9 +995,11 @@ This brief should be treated as the source of truth for all downstream implement
 - Eligible EV user management.
 - Privacy acknowledgement storage.
 - Charger/session state handling.
-- OCPP/virtual charger telemetry ingestion API.
-- Authentication handshake validation support.
-- Normalized event processing.
+- CSMS REST API client/wrapper.
+- Booking-to-RFID/tag authorization integration.
+- Charger availability synchronization from the CSMS.
+- Session and meter-value retrieval from the CSMS.
+- Local booking/session mapping and CSMS sync-state handling.
 - Database schema/migrations.
 - Reporting endpoints.
 - Notification generation/delivery support for in-app, email, and Teams Adaptive Cards.
@@ -982,8 +1025,8 @@ This brief should be treated as the source of truth for all downstream implement
 - One-hour-per-user-per-day limit test cases.
 - Eligible EV user access test cases.
 - Privacy acknowledgement test cases.
-- OCPP/virtual charger lifecycle test cases.
-- Contactless authentication test cases using EID, parking slot, and badge.
+- Provided CSMS/simulator-backed lifecycle test cases.
+- Booking-to-RFID/tag authorization and revocation test cases.
 - Role-based action test cases.
 - Reporting validation test cases.
 - AI grounding/transparency test cases.
@@ -997,7 +1040,7 @@ This brief should be treated as the source of truth for all downstream implement
 - Backup demo path.
 - Value proposition talking points.
 - Responsible AI explanation.
-- OCPP-readiness explanation.
+- Provided CSMS integration and OCPP-readiness explanation.
 - Sustainability impact explanation.
 - Privacy/RBAC explanation.
 

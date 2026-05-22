@@ -9,20 +9,20 @@
 | **Source** | `.claude/docs/use-case-brief.md` (Accenture Mauritius NEXLevel — "Energising the Future, Reinvented") |
 | **Status** | Draft — Hackathon MVP |
 | **Date** | 2026-05-22 |
-| **Version** | v1.2 |
+| **Version** | v1.3 |
 | **Author** | Product Analyst |
 | **Audience** | Solution Architect, Backend Dev, Frontend Dev, QA, Scrum Master, Demo Coach |
-| **Revision Notes** | v1.2 — Aligned to the latest `.claude/docs/use-case-brief.md`. Key changes: (1) Corrected the daily charging cap from 2 hours / 120 minutes to **1 hour / 60 minutes per user per day** (BR002 alignment) across scope summary, FR-BOOK-002/003/006, BR-001, validations, AC-BOOK-03, AC-BOOK-07, assumptions, and traceability. (2) Added a Privacy Acknowledgement feature group (FR-PRIV-001..005, BR-023..024, AC-PRIV-01..04) per brief Section 10.11 / BR013. (3) Added an Eligible EV User Management feature group (FR-USER-001..006, BR-025..026, AC-USER-01..04) per brief Section 10.5 / BR006. (4) Added an explicit OCPP Authorize / contactless handshake event (FR-OCPP-011..013, BR-027..028, AC-OCPP-09..11) per brief Section 10.3 / BR004. (5) Added vehicle make/model capture on session/booking (FR-BOOK-013, FR-OCPP-014, FR-REP-017). (6) Added Audit Log as a first-class feature group (FR-AUDIT-001..005, AC-AUDIT-01..03) per brief Section 16. (7) Added Admin Maintenance Block management (FR-ADMIN-001..003, AC-ADMIN-01..02) per brief Section 10.10. (8) Added booking state `Pending` and re-confirmed `Overridden`; added Charging Session state enum `NotStarted, Authenticating, Charging, Completed, StoppedByUser, StoppedByAdmin, Faulted, Expired` per brief Section 17. (9) Added Workplace User as a first-class role and clarified Reporting/ESG Viewer per brief Section 10.9. (10) Re-aligned charger status to canonical UI label **Blocked for Maintenance** per brief Section 10.2 (kept legacy term `Maintenance` documented as equivalent). (11) Refreshed notification section against brief Sections 10.6, 13, 14, 19 — kept all v1.1 notification content; clarified Workplace user as a recipient for operational alerts and added Adaptive Card preview persistence requirement (FR-REM-019). No existing IDs from v1.1 were renumbered. |
+| **Revision Notes** | v1.3 — Aligned to the updated `.claude/docs/use-case-brief.md` (Section 6.1 — Provided CSMS / OCPP Simulator Constraint). Key changes: (1) The custom application MUST NOT implement a custom OCPP WebSocket server, raw OCPP protocol handlers, or raw OCPP message ingestion. All charging infrastructure data comes from the provided NexLevel CSMS REST API. (2) Section 4.3 renamed from "OCPP-Style Consumption Capture (simulated telemetry)" to "CSMS REST API Integration"; FR-OCPP-001..014 retained the same IDs for traceability but their descriptions were rewritten to describe consuming CSMS REST endpoints (`GET /api/stations`, `GET /api/stations/:identity`, `GET /api/sessions/active`, `GET /api/sessions/:id`, `GET /api/sessions`, `POST /api/auth/tags`, `DELETE /api/auth/tags/:idTag`, `GET /api/auth/tags?active=true`, `PUT/DELETE /api/stations/:id/connectors/:n/block`, `POST /api/stations/:id/remote-start`, `POST /api/stations/:id/remote-stop`). (3) Added a "CSMS Authorization Sync Status" sub-section with the booking sync states `AuthorizationPending`, `Authorized`, `AuthorizationFailed`, `Revoked`. (4) Scope summary rewritten to remove references to building a custom OCPP ingestion endpoint; replaced with CSMS REST API integration language. (5) BR-027 and BR-028 rewritten to describe CSMS booking-to-authorization flow validation; added BR-029 for AuthorizationFailed handling. (6) Validation rules updated: removed TelemetryEvent / Authorize event rows; added Booking.csmsSyncStatus, CSMS-call station/connector validation, and CSMS error → AuthorizationFailed mapping. (7) Acceptance criteria for Section 4.3 (AC-OCPP-01..09) rewritten to test CSMS integration (POST/DELETE /api/auth/tags, GET /api/sessions/active, GET /api/sessions/:id, GET /api/stations, connector block/unblock, end-to-end CSMS-driven lifecycle). (8) Section 12 Demo Journey updated to describe CSMS-driven flow (POST /api/auth/tags on booking confirmation, GET /api/sessions/active polling, GET /api/sessions/:id for energy, GET /api/stations for connector status). (9) Out-of-scope (Section 15) explicitly lists "Custom OCPP WebSocket server" and "Raw OCPP message handling". (10) Traceability table row "OCPP-Style Consumption Capture & Contactless Auth" renamed to "CSMS REST API Integration" with updated brief section references (6.1, 10.3, 18). (11) Open Questions Q25 (CSMS base URL / auth), Q26 (polling interval), and Q27 (idTag format) added. No existing FR/BR/AC IDs from v1.1 or v1.2 were renumbered. v1.2 — Aligned to the latest `.claude/docs/use-case-brief.md`. Key changes: (1) Corrected the daily charging cap from 2 hours / 120 minutes to **1 hour / 60 minutes per user per day** (BR002 alignment) across scope summary, FR-BOOK-002/003/006, BR-001, validations, AC-BOOK-03, AC-BOOK-07, assumptions, and traceability. (2) Added a Privacy Acknowledgement feature group (FR-PRIV-001..005, BR-023..024, AC-PRIV-01..04) per brief Section 10.11 / BR013. (3) Added an Eligible EV User Management feature group (FR-USER-001..006, BR-025..026, AC-USER-01..04) per brief Section 10.5 / BR006. (4) Added an explicit OCPP Authorize / contactless handshake event (FR-OCPP-011..013, BR-027..028, AC-OCPP-09..11) per brief Section 10.3 / BR004. (5) Added vehicle make/model capture on session/booking (FR-BOOK-013, FR-OCPP-014, FR-REP-017). (6) Added Audit Log as a first-class feature group (FR-AUDIT-001..005, AC-AUDIT-01..03) per brief Section 16. (7) Added Admin Maintenance Block management (FR-ADMIN-001..003, AC-ADMIN-01..02) per brief Section 10.10. (8) Added booking state `Pending` and re-confirmed `Overridden`; added Charging Session state enum `NotStarted, Authenticating, Charging, Completed, StoppedByUser, StoppedByAdmin, Faulted, Expired` per brief Section 17. (9) Added Workplace User as a first-class role and clarified Reporting/ESG Viewer per brief Section 10.9. (10) Re-aligned charger status to canonical UI label **Blocked for Maintenance** per brief Section 10.2 (kept legacy term `Maintenance` documented as equivalent). (11) Refreshed notification section against brief Sections 10.6, 13, 14, 19 — kept all v1.1 notification content; clarified Workplace user as a recipient for operational alerts and added Adaptive Card preview persistence requirement (FR-REM-019). No existing IDs from v1.1 were renumbered. |
 
 ---
 
 ## 2. Scope Summary
 
-The MVP is a mobile-first responsive web application for fair EV charger reservation, real-time charger visibility, OCPP-style telemetry capture (including a simulated contactless authentication handshake), eligible EV user management, privacy acknowledgement, sustainability reporting, and responsible AI insights at NEX Tower and NEXTERACOM.
+The MVP is a mobile-first responsive web application for fair EV charger reservation, real-time charger visibility, CSMS-driven session and energy capture (including booking-to-RFID/tag authorization via the provided CSMS), eligible EV user management, privacy acknowledgement, sustainability reporting, and responsible AI insights at NEX Tower and NEXTERACOM.
 
-**In scope:** authenticated booking with a **1-hour-per-user-per-day fair-use cap** (BR002), privacy acknowledgement, eligible EV user registry, live charger dashboard, simulated OCPP telemetry pipeline (BootNotification, StatusNotification, **Authorize / contactless handshake**, StartTransaction, MeterValues, StopTransaction), session/energy tracking with vehicle make/model capture, reporting and sustainability metrics, multi-channel reminders (in-app required; email and Microsoft Teams Adaptive Card delivery if feasible, otherwise realistic preview/generated payloads for demo), notification center and history, admin/security/workplace override and manual release, maintenance block create/remove, audit logging for critical actions, and a grounded AI insights panel.
+**In scope:** authenticated booking with a **1-hour-per-user-per-day fair-use cap** (BR002), privacy acknowledgement, eligible EV user registry, live charger dashboard, integration with the **provided NexLevel CSMS REST API** (station status, active and historical sessions, meter values, RFID/tag authorization windows, connector block/unblock, optional remote start/stop), booking-to-CSMS RFID/tag authorization lifecycle (`POST /api/auth/tags` on confirm, `DELETE /api/auth/tags/:idTag` on cancel/release), local mapping of CSMS sessions/energy data to bookings/users/vehicles, session/energy tracking with vehicle make/model capture, reporting and sustainability metrics, multi-channel reminders (in-app required; email and Microsoft Teams Adaptive Card delivery if feasible, otherwise realistic preview/generated payloads for demo), notification center and history, admin/security/workplace override and manual release, maintenance block create/remove (via CSMS connector block APIs), audit logging for critical actions, and a grounded AI insights panel.
 
-**Out of scope:** real OCPP hardware integration, SMS or mobile push notification delivery, fully production-grade email/Teams notification infrastructure (preview/generated payloads acceptable for MVP if live delivery not feasible), payments, HR system integration, native mobile apps, multi-tenant support, fleet/vehicle management beyond storing make/model, grid pricing, dynamic tariffs, and vehicle-charger compatibility matching.
+**Out of scope:** real OCPP hardware integration, **custom OCPP WebSocket server implementation, raw OCPP protocol handlers, raw OCPP message ingestion (BootNotification, StatusNotification, Authorize, StartTransaction, MeterValues, StopTransaction) — all charging infrastructure data comes from the provided CSMS REST API**, SMS or mobile push notification delivery, fully production-grade email/Teams notification infrastructure (preview/generated payloads acceptable for MVP if live delivery not feasible), payments, HR system integration, native mobile apps, multi-tenant support, fleet/vehicle management beyond storing make/model, grid pricing, dynamic tariffs, and vehicle-charger compatibility matching.
 
 ---
 
@@ -72,29 +72,46 @@ Roles are aligned with brief Sections 7 and 10.9.
 | **FR-DASH-001** | Show all chargers with status | Display each charger with status (Available, Reserved, Charging, Blocked for Maintenance, Unavailable, Faulted), location, and connector. The canonical UI label is "Blocked for Maintenance" (legacy term "Maintenance" remains as a data equivalence). | P0 | All |
 | **FR-DASH-002** | Filter by location | Allow filtering by NEX Tower or NEXTERACOM. | P0 | All |
 | **FR-DASH-003** | Mobile-first layout | Charger cards readable on mobile (≥320px) with large touch targets, no horizontal scroll. | P0 | Standard User |
-| **FR-DASH-004** | Real-time / near-real-time updates | Charger status reflects backend telemetry changes within 5 seconds (polling, SignalR, or WebSocket — TBD by architect). | P0 | All |
+| **FR-DASH-004** | Real-time / near-real-time updates | Charger status reflects CSMS station/connector state (sourced from `GET /api/stations`, `GET /api/sessions/active`) within 5 seconds via backend polling at the configured interval (default 5s; SignalR/WebSocket optional if exposed by the CSMS). | P0 | All |
 | **FR-DASH-005** | Show active session info | When a charger is Charging, show transactionId, user (masked for non-admin), elapsed time, energyKWh, and vehicle make/model (privacy-permitting; masked for non-admin). | P1 | All (admin sees user) |
 | **FR-DASH-006** | Admin charger status control | Security, Workplace, or Admin can mark a charger Unavailable, Faulted, or Blocked for Maintenance with reason. | P1 | Security, Workplace, Admin |
 | **FR-DASH-007** | Status driven by backend only | UI shall not modify charger status locally; status comes from backend events. | P0 | System |
 
-### 4.3 OCPP-Style Consumption Capture (simulated telemetry)
+### 4.3 CSMS REST API Integration
+
+Brief reference: Sections 6.1 (Provided CSMS / OCPP Simulator Constraint), 10.3, 18.
+
+> **Important constraint:** The custom application MUST NOT implement a custom OCPP WebSocket server, raw OCPP protocol handlers, or raw OCPP message ingestion (BootNotification, StatusNotification, Authorize, StartTransaction, MeterValues, StopTransaction). All charging infrastructure data flows from the provided NexLevel CSMS through its REST API into the custom backend, and from the backend into the frontend.
 
 | ID | Title | Description | Priority | Role(s) |
 |---|---|---|---|---|
-| **FR-OCPP-001** | Telemetry ingestion endpoint | The backend shall expose an ingestion endpoint that accepts simulated OCPP-style events (BootNotification, StatusNotification, Authorize, StartTransaction, MeterValues, StopTransaction). | P0 | System (Simulator) |
-| **FR-OCPP-002** | Normalize raw events | Inbound events shall be normalized into the internal `TelemetryEvent` model with `chargerId, connectorId, eventType, transactionId, userEid, badgeId, parkingSlot, userId, vehicleMake, vehicleModel, status, energyKWh, powerKW, timestamp, source`. | P0 | System |
-| **FR-OCPP-003** | Update charger state from StatusNotification | On a StatusNotification event, the corresponding charger's status shall be updated. | P0 | System |
-| **FR-OCPP-004** | Start charging session | On StartTransaction (with valid bookingId/userId/chargerId AND a prior successful Authorize for the same user/charger/slot), a ChargingSession row shall be created in `Charging` state. | P0 | System |
-| **FR-OCPP-005** | Record meter values | MeterValues events shall be persisted and the active ChargingSession's cumulative `energyKWh` updated. | P0 | System |
-| **FR-OCPP-006** | Stop charging session | StopTransaction shall set the ChargingSession to Completed, finalize energyKWh, and return the charger to Available. | P0 | System |
-| **FR-OCPP-007** | Lifecycle: Available → Reserved → Authenticating → Charging → Completed → Available | The simulator must support the full lifecycle for demo, including the Authorize handshake step. | P0 | System |
-| **FR-OCPP-008** | Fallback recorded scenario | A pre-recorded telemetry scenario shall be available for demo fallback. | P0 | System |
-| **FR-OCPP-009** | Label simulated source | Every stored telemetry event shall carry `source = "Simulator"` (or equivalent) so downstream layers can label simulated data. | P0 | System |
-| **FR-OCPP-010** | Reject unknown chargerId | The ingestion endpoint shall reject events for chargers not in the registry (HTTP 400). | P0 | System |
-| **FR-OCPP-011** | OCPP Authorize / contactless authentication handshake | On an `Authorize` event, the system shall validate the supplied **EID + parking slot + badge** against the eligible-EV-user registry AND verify that the user has a valid Confirmed/Active booking for the charger at the current time. The Authorize response shall return `Accepted` only if both checks pass; otherwise `Rejected` with a reason code (`UnknownUser`, `NotEligible`, `NoActiveBooking`, `BadgeMismatch`, `SlotMismatch`, `PrivacyNotAcknowledged`). | P0 | System |
-| **FR-OCPP-012** | Block StartTransaction without prior Authorize | The system shall reject a StartTransaction event that is not preceded by an `Accepted` Authorize response for the same EID + parking slot + badge + charger combination within a configurable window (default 5 minutes). | P0 | System |
-| **FR-OCPP-013** | Authorize audit trail | Every Authorize event (Accepted or Rejected) shall be persisted with timestamp, EID, badge, parking slot, charger, decision, and reason code, and shall produce an audit log entry (see FR-AUDIT-001). | P0 | System |
-| **FR-OCPP-014** | Capture vehicle make/model on session | Where vehicle make/model is present on the booking or eligible-EV-user record, it shall be persisted on the charging session created by StartTransaction. Reports may segment by vehicle category subject to privacy rules. | P1 | System |
+| **FR-OCPP-001** | Station status retrieval | The backend shall integrate with the provided CSMS REST API (`GET /api/stations`) to retrieve all station identities and live connection status, and shall use this as the canonical source of station availability. | P0 | System |
+| **FR-OCPP-002** | Single station retrieval | The backend shall retrieve individual station details and connector status via `GET /api/stations/:identity` from the CSMS, and shall map the returned data onto the local charger registry. | P0 | System |
+| **FR-OCPP-003** | Charger status synchronization | The backend shall periodically poll or sync station/connector status from the CSMS and update the internal charger registry. The update interval is configurable (default 5 seconds) and drives the real-time dashboard refresh. | P0 | System |
+| **FR-OCPP-004** | Active session retrieval | The backend shall retrieve active charging sessions from the CSMS via `GET /api/sessions/active` and map them to local bookings (by idTag / station / connector). | P0 | System |
+| **FR-OCPP-005** | Session details and meter values | The backend shall retrieve session details, meter values, and cumulative energy from the CSMS via `GET /api/sessions/:id` and persist `energyKWh` (and final session timestamps) on the local ChargingSession record. | P0 | System |
+| **FR-OCPP-006** | Historical session retrieval | The backend shall retrieve historical sessions from the CSMS via `GET /api/sessions?station=&idTag=&status=&from=&to=` for reporting, sustainability dashboards, and AI insights. | P0 | System |
+| **FR-OCPP-007** | Booking-to-RFID/tag authorization | When a booking is confirmed, the backend shall call `POST /api/auth/tags` on the CSMS to create an authorization window for the booking's RFID/idTag, station, and time window. The booking shall store a CSMS sync status (one of `AuthorizationPending`, `Authorized`, `AuthorizationFailed`, `Revoked`). | P0 | System |
+| **FR-OCPP-008** | Authorization revocation | When a booking is cancelled or released (by the user, by the system on no-show, or by an admin/security/workplace override), the backend shall call `DELETE /api/auth/tags/:idTag` on the CSMS to revoke the authorization window. The revocation outcome is persisted on the booking (`Revoked` on success; failures are surfaced and audit-logged). | P0 | System |
+| **FR-OCPP-009** | Active authorization listing | The backend shall query `GET /api/auth/tags?active=true` on the CSMS to verify current authorization state and reconcile with local booking records (used for sync repair and for operational troubleshooting views). | P0 | System |
+| **FR-OCPP-010** | CSMS sync failure handling | If a CSMS authorization call (`POST /api/auth/tags`) fails (non-2xx response, timeout, network error), the booking MUST NOT be silently confirmed as fully operational. The booking `csmsSyncStatus` shall be set to `AuthorizationFailed`, the user shall see an error message, and an admin/security/workplace intervention alert shall be raised. | P0 | System |
+| **FR-OCPP-011** | Maintenance block via CSMS | When an Admin creates a maintenance block, the backend shall call `PUT /api/stations/:id/connectors/:n/block` on the CSMS to block the connector in the charging infrastructure. When the block is removed, the backend shall call `DELETE /api/stations/:id/connectors/:n/block`. Both actions are audit-logged. | P1 | System |
+| **FR-OCPP-012** | Optional remote start | If required by the demo journey, the backend may call `POST /api/stations/:id/remote-start` on the CSMS to trigger a charging session start for a confirmed booking using the authorized idTag. This action is optional and gated by configuration. | P2 | System |
+| **FR-OCPP-013** | Optional remote stop | If required by the demo journey, the backend may call `POST /api/stations/:id/remote-stop` on the CSMS to stop an active charging session (for example as part of admin/security manual release). This action is optional and gated by configuration. | P2 | System |
+| **FR-OCPP-014** | Capture vehicle make/model on session | Where vehicle make/model is present on the booking or eligible-EV-user record, it shall be persisted on the charging session retrieved from the CSMS. Reports may segment by vehicle category subject to privacy rules. | P1 | System |
+
+#### CSMS Authorization Sync Status
+
+Every booking carries a `csmsSyncStatus` field reflecting the result of integration with the provided CSMS:
+
+| Status | Meaning |
+|---|---|
+| **AuthorizationPending** | `POST /api/auth/tags` call to the CSMS has not yet been made or is in progress. Booking is locally created but not yet fully operational against the CSMS. |
+| **Authorized** | CSMS confirmed the authorization window (2xx response from `POST /api/auth/tags`). Booking is fully operational and the RFID/idTag can be used at the station. |
+| **AuthorizationFailed** | CSMS call failed (non-2xx, timeout, or network error). Booking is NOT fully operational. User and admin/security/workplace are informed; the booking does not count as Reserved/Available capacity until resolved. |
+| **Revoked** | CSMS authorization was revoked via `DELETE /api/auth/tags/:idTag` (booking cancelled, released, or admin override). |
+
+> **Reminder:** The custom application must NOT implement a custom OCPP WebSocket server, raw OCPP protocol handlers, or raw OCPP message ingestion. All charging infrastructure data comes through the provided CSMS REST API. OCPP-level message handling (BootNotification, StatusNotification, Authorize, StartTransaction, MeterValues, StopTransaction) is owned by the provided NexLevel CSMS.
 
 ### 4.4 Smart Reminders and Slot Release
 
@@ -108,7 +125,7 @@ Roles are aligned with brief Sections 7 and 10.9.
 | **FR-REM-006** | Admin manual release confirmation | When Security/Workplace/Admin manually releases, the affected user receives an in-app notification with the reason. | P1 | Standard User, Security, Workplace, Admin |
 | **FR-REM-007** | List notifications | Standard Users can view a list of their in-app notifications. | P1 | Standard User |
 | **FR-REM-008** | Booking confirmation reminder | On successful booking creation, generate an in-app notification confirming the booking (charger, time window, location, vehicle make/model). | P1 | Standard User |
-| **FR-REM-009** | Booking grace period warning | After booking startTime if no StartTransaction has been received, send an in-app warning to the user before the grace period expires (default: 5 minutes after start, i.e. 10 minutes before auto-release). | P1 | Standard User |
+| **FR-REM-009** | Booking grace period warning | After booking startTime if no active charging session has been reported by the CSMS (`GET /api/sessions/active`) for the booking's idTag, send an in-app warning to the user before the grace period expires (default: 5 minutes after start, i.e. 10 minutes before auto-release). | P1 | Standard User |
 | **FR-REM-010** | Admin/security/workplace intervention alert | Generate an in-app alert to Security, Workplace, and Admin when operational intervention may be needed: repeated no-shows by a user (threshold configurable, default ≥ 2 in 7 days), late release (session continues past booking end + grace), or charger Faulted during active session. | P1 | Security, Workplace, Admin |
 | **FR-REM-011** | Email notification delivery or preview | For every reminder template, the system shall either send a real email (if SMTP/mock provider configured) or generate and persist a realistic email payload (subject, body, recipient) viewable in the notification audit/history for demo purposes. | P1 | Standard User, Security, Workplace, Admin |
 | **FR-REM-012** | Microsoft Teams Adaptive Card delivery or preview | For every reminder template, the system shall either deliver an Adaptive Card via Incoming Webhook / Power Automate / Microsoft Graph (if available) or generate and persist a valid Adaptive Card JSON payload viewable in the notification audit/history for demo purposes. | P1 | Standard User, Security, Workplace, Admin |
@@ -126,7 +143,7 @@ Roles are aligned with brief Sections 7 and 10.9.
 |---|---|---|---|---|
 | **FR-REP-001** | Total charging sessions | Display total count of ChargingSessions over a selected date range. | P0 | Admin, Workplace, Reporting/ESG Viewer, Management |
 | **FR-REP-002** | Total energy consumed (kWh) | Display sum of energyKWh across all completed sessions. | P0 | Admin, Workplace, Reporting/ESG Viewer |
-| **FR-REP-003** | Average session duration | Display avg(StopTransaction − StartTransaction) for completed sessions. | P1 | Admin, Workplace |
+| **FR-REP-003** | Average session duration | Display avg(stopTime − startTime) for completed sessions retrieved from the CSMS via `GET /api/sessions`. | P1 | Admin, Workplace |
 | **FR-REP-004** | Average energy per session | Display avg(energyKWh) per completed session. | P1 | Admin, Workplace, Reporting/ESG Viewer |
 | **FR-REP-005** | Charger utilization rate | Display % of operating hours a charger spent in Reserved or Charging state. | P1 | Admin, Workplace |
 | **FR-REP-006** | Peak charging hours | Display distribution of charging starts by hour-of-day. | P1 | Admin, Workplace |
@@ -135,7 +152,7 @@ Roles are aligned with brief Sections 7 and 10.9.
 | **FR-REP-009** | Estimated CO₂ savings | Display total estimated kgCO₂ avoided using formula `kWh * fixedEmissionFactor`. Display the emission factor value used. | P0 | Reporting/ESG Viewer, Management |
 | **FR-REP-010** | Failed / cancelled / released bookings | Display counts of failed booking attempts, cancellations, and releases. | P1 | Admin, Workplace |
 | **FR-REP-011** | Faulted / unavailable charger events | Display count and timeline of charger fault and unavailable events. | P1 | Admin, Workplace |
-| **FR-REP-012** | Label simulated data | All report widgets shall include a visible "Based on simulated demo data" label when any of the underlying telemetry is from the Simulator source. | P0 | System |
+| **FR-REP-012** | Label simulated data | All report widgets shall include a visible "Based on simulated demo data" label when any of the underlying data is sourced from the CSMS simulator (i.e. local ChargingSession records with `source = "CSMS-Simulator"`). | P0 | System |
 | **FR-REP-013** | Date range and location filters | Reporting dashboard shall support date range and location filtering. | P1 | Admin, Workplace, Reporting/ESG Viewer |
 | **FR-REP-014** | Notification delivery metrics | Display counts of notifications generated by channel (in-app, email, Teams) and by delivery status (Sent, Previewed, Failed) over the selected date range. | P1 | Admin, Workplace |
 | **FR-REP-015** | Notification acknowledgment rate | Display the percentage of in-app notifications marked read by users over the selected date range. | P2 | Admin, Workplace |
@@ -167,7 +184,7 @@ Roles are aligned with brief Sections 7 and 10.9.
 | **FR-AUTH-003** | Role-based UI | The UI shall show or hide admin/security/workplace capabilities based on the authenticated role. | P0 | System |
 | **FR-AUTH-004** | Role-based API authorization | The backend shall reject role-restricted actions (override, release of others' bookings, charger status writes, eligible-user CRUD, audit log access, report-only views) for unauthorised roles (HTTP 403). | P0 | System |
 | **FR-AUTH-005** | Logout | The user can end their session and return to login. | P1 | All |
-| **FR-AUTH-006** | Eligibility & privacy gate on protected actions | The backend shall reject booking creation and StartTransaction when the authenticated user is not on the eligible-EV-user registry OR has not acknowledged the current privacy notice (HTTP 403 with a machine-readable reason code). | P0 | System |
+| **FR-AUTH-006** | Eligibility & privacy gate on protected actions | The backend shall reject booking creation (and shall NOT issue a CSMS `POST /api/auth/tags` authorization call) when the authenticated user is not on the eligible-EV-user registry OR has not acknowledged the current privacy notice (HTTP 403 with a machine-readable reason code). | P0 | System |
 
 ### 4.8 Privacy Acknowledgement
 
@@ -176,7 +193,7 @@ Brief reference: Section 10.11, BR013.
 | ID | Title | Description | Priority | Role(s) |
 |---|---|---|---|---|
 | **FR-PRIV-001** | Privacy notice retrieval | The system shall expose the current privacy notice content (text, version, effective date) via an API and render it in the UI. | P0 | All |
-| **FR-PRIV-002** | Required content of privacy notice | The privacy notice shall explain: (a) what personal data is stored (identity, EID, badge, parking slot, vehicle make/model, booking, session, energy, telemetry); (b) why it is stored (charging access, operational tracking, reporting, governance, sustainability); (c) who can access it (Security, Workplace, Admin, Reporting/ESG Viewer roles per RBAC); (d) how booking, vehicle, badge, parking slot, and charging data are used. | P0 | All |
+| **FR-PRIV-002** | Required content of privacy notice | The privacy notice shall explain: (a) what personal data is stored (identity, EID, badge, parking slot, vehicle make/model, booking, charging session, energy consumption data retrieved from the provided CSMS); (b) why it is stored (charging access, operational tracking, reporting, governance, sustainability); (c) who can access it (Security, Workplace, Admin, Reporting/ESG Viewer roles per RBAC); (d) how booking, vehicle, badge, parking slot, and charging data are used. | P0 | All |
 | **FR-PRIV-003** | Acknowledgement before first booking | A Standard User MUST acknowledge the current privacy notice version before their first booking can be created. If unacknowledged, the booking creation endpoint returns HTTP 403 with reason `PrivacyNotAcknowledged`. | P0 | Standard User |
 | **FR-PRIV-004** | Persist acknowledgement status and timestamp | The system shall persist per-user the privacy notice version acknowledged, the acknowledgement timestamp, and the userId. | P0 | System |
 | **FR-PRIV-005** | Re-acknowledgement on version change | If the privacy notice version changes, all users MUST re-acknowledge before their next booking. The previous acknowledgement record is retained for audit. | P1 | Standard User, System |
@@ -187,9 +204,9 @@ Brief reference: Section 16 (Audit Log as a domain concept), Section 20 (Auditab
 
 | ID | Title | Description | Priority | Role(s) |
 |---|---|---|---|---|
-| **FR-AUDIT-001** | Record critical actions | The system shall persist an audit log entry for each of the following actions: admin/security/workplace override or manual release; admin booking on behalf of a user; maintenance block create/remove; charger status change by an admin/security/workplace user; eligible-EV-user create/update/delete; privacy acknowledgement creation and re-acknowledgement; Authorize event decisions (Accepted/Rejected); telemetry-driven booking state changes (e.g., NoShow auto-release, charger Faulted releases). | P0 | System |
-| **FR-AUDIT-002** | Audit entry shape | Each audit log entry shall include: id, timestamp, actorUserId (or `system`), actorRole, action, entityType, entityId, beforeState, afterState, reason (where applicable), and source (`user`, `admin`, `system`, `simulator`). | P0 | System |
-| **FR-AUDIT-003** | Audit log read access | Admin can view the full audit log. Security and Workplace can view audit entries scoped to operational actions (bookings, sessions, charger status, maintenance blocks, Authorize decisions). Standard Users cannot access the audit log. | P0 | Security, Workplace, Admin |
+| **FR-AUDIT-001** | Record critical actions | The system shall persist an audit log entry for each of the following actions: admin/security/workplace override or manual release; admin booking on behalf of a user; maintenance block create/remove (including the CSMS `PUT/DELETE /api/stations/:id/connectors/:n/block` outcome); charger status change by an admin/security/workplace user; eligible-EV-user create/update/delete; privacy acknowledgement creation and re-acknowledgement; CSMS authorization outcomes (`Authorized`, `AuthorizationFailed`, `Revoked` from `POST/DELETE /api/auth/tags`); CSMS-driven booking state changes (e.g., NoShow auto-release, charger Faulted releases observed via the CSMS). | P0 | System |
+| **FR-AUDIT-002** | Audit entry shape | Each audit log entry shall include: id, timestamp, actorUserId (or `system`), actorRole, action, entityType, entityId, beforeState, afterState, reason (where applicable), and source (`user`, `admin`, `system`, `csms`). | P0 | System |
+| **FR-AUDIT-003** | Audit log read access | Admin can view the full audit log. Security and Workplace can view audit entries scoped to operational actions (bookings, sessions, charger status, maintenance blocks, CSMS authorization outcomes). Standard Users cannot access the audit log. | P0 | Security, Workplace, Admin |
 | **FR-AUDIT-004** | Immutability | Audit log entries shall not be editable or deletable by any role through the application. | P0 | System |
 | **FR-AUDIT-005** | Audit log filtering | The audit log view shall support filtering by date range, actor, action type, and entity type. | P1 | Security, Workplace, Admin |
 
@@ -210,7 +227,7 @@ Brief reference: Section 10.5, BR006.
 | ID | Title | Description | Priority | Role(s) |
 |---|---|---|---|---|
 | **FR-USER-001** | Eligible EV user registry | The system shall maintain a registry of eligible EV users with the following fields: userId, displayName, workplaceRegistryEid (EID), badgeId, eligibilityStatus (Active / Inactive / Suspended), vehicleMake, vehicleModel, role, siteContext (NEX-TOWER / NEXTERACOM / both), privacyAcknowledgementStatus, lastUpdatedTimestamp. | P0 | System |
-| **FR-USER-002** | Eligibility gate on booking | Booking creation and OCPP Authorize shall be rejected (HTTP 403 / `Rejected: NotEligible`) when the user's eligibilityStatus is not `Active`. | P0 | System |
+| **FR-USER-002** | Eligibility gate on booking | Booking creation (and any downstream CSMS authorization call via `POST /api/auth/tags`) shall be rejected (HTTP 403 with reason `NotEligible`) when the user's eligibilityStatus is not `Active`. | P0 | System |
 | **FR-USER-003** | Admin CRUD on eligible EV users | Admin can create, view, update, suspend/re-activate, and delete eligible EV user records. Each change is audit-logged (FR-AUDIT-001). | P1 | Admin |
 | **FR-USER-004** | Read-only access for operational roles | Security and Workplace can view (but not modify) the eligible EV user registry to support operational triage. | P1 | Security, Workplace |
 | **FR-USER-005** | Self-view of own eligibility | A Standard User can view their own eligible-EV-user record (eligibility status, EID, badge, vehicle make/model, privacy acknowledgement status). | P1 | Standard User |
@@ -224,14 +241,14 @@ Brief reference: Section 10.5, BR006.
 2. **BR-002** Two Pending/Confirmed/Active bookings on the same charger MUST NOT overlap in time (closed-open interval `[start, end)`).
 3. **BR-003** A user MUST NOT hold more than one Pending, Confirmed, or Active booking at any time, AND the user's total Confirmed/Active booking duration on the same calendar day MUST NOT exceed 60 minutes.
 4. **BR-004** A booking can only be created against a charger whose current status is `Available` or that is `Reserved`/`Charging` for a non-overlapping later slot. A charger in `Blocked for Maintenance`, `Unavailable`, or `Faulted` cannot accept new bookings.
-5. **BR-005** Charger status transitions follow this lifecycle: `Available → Reserved → Charging → Available`. Side transitions to `Faulted`, `Unavailable`, or `Blocked for Maintenance` are allowed from any state and recovery back to `Available` requires admin action or a BootNotification.
-6. **BR-006** A no-show grace period of **15 minutes** (configurable) applies after booking start. After the grace period with no StartTransaction, the booking moves to `NoShow`, the charging session (if instantiated) moves to `Expired`, and the charger returns to `Available`.
+5. **BR-005** Charger status transitions follow this lifecycle: `Available → Reserved → Charging → Available`. Side transitions to `Faulted`, `Unavailable`, or `Blocked for Maintenance` are allowed from any state and are sourced from the CSMS (`GET /api/stations`); recovery back to `Available` requires admin action and/or the CSMS reporting the connector as available again.
+6. **BR-006** A no-show grace period of **15 minutes** (configurable) applies after booking start. After the grace period with no active charging session reported by the CSMS (`GET /api/sessions/active`) for the booking's idTag, the booking moves to `NoShow`, the charging session (if instantiated) moves to `Expired`, the CSMS authorization is revoked via `DELETE /api/auth/tags/:idTag`, and the charger returns to `Available`.
 7. **BR-007** Admin/Security/Workplace override of the 1h cap or another user's booking REQUIRES a non-empty reason and creates an audit-log entry.
 8. **BR-008** CO₂ savings are estimated using a fixed emission factor of **0.85 kgCO₂/kWh** (provisional — see Open Questions) and the value used MUST be visible alongside the metric.
-9. **BR-009** All telemetry events stored with `source = "Simulator"` are considered simulated; any metric or AI insight derived from at least one simulated event MUST be visibly labelled "Based on simulated demo data".
+9. **BR-009** Any data retrieved from the provided CSMS that is sourced from the simulator (sessions, meter values, station/connector status) is considered simulated. Local ChargingSession records carry `source = "CSMS-Simulator"` for such data. Any metric or AI insight derived from at least one simulator-sourced record MUST be visibly labelled "Based on simulated demo data".
 10. **BR-010** A user cannot cancel a booking that is already `Active`; they must use **Release** instead.
 11. **BR-011** A user cannot release a booking that is not `Active` (or `Confirmed`, if release-before-start is enabled — provisional, see Open Questions).
-12. **BR-012** A ChargingSession is uniquely linked to one Booking, one Charger, one Connector, and one User; StartTransaction without a matching Confirmed/Active booking AND a prior `Accepted` Authorize is rejected unless triggered by an admin override path.
+12. **BR-012** A ChargingSession is uniquely linked to one Booking, one Charger, one Connector, and one User. The custom backend creates/updates the local ChargingSession only from CSMS data (`GET /api/sessions/active` and `GET /api/sessions/:id`) and only when the booking has `csmsSyncStatus = Authorized`. Sessions returned by the CSMS that cannot be mapped to a Confirmed/Active booking are flagged for operational review (unless they originate from an admin override path).
 13. **BR-013** Booking start time MUST be in the future or current (within a small tolerance, e.g., 1 minute) at the moment of submission.
 14. **BR-014** All booking state changes (Pending, Confirmed, Active, Completed, Cancelled, Released, NoShow, Overridden) and all charging session state changes (NotStarted, Authenticating, Charging, Completed, StoppedByUser, StoppedByAdmin, Faulted, Expired) MUST be persisted and timestamped.
 15. **BR-015** When a charger transitions to `Faulted` during an Active session, the session moves to `Faulted`, the booking moves to `Released` (or `Overridden`), and the user is notified.
@@ -246,8 +263,9 @@ Brief reference: Section 10.5, BR006.
 24. **BR-024** When the privacy notice version changes, prior acknowledgements remain stored for audit but the user MUST re-acknowledge before their next booking (FR-PRIV-005).
 25. **BR-025** Only users on the eligible-EV-user registry with `eligibilityStatus = Active` may create bookings or initiate a charging session via Authorize (BR006).
 26. **BR-026** Only Admin can modify the eligible-EV-user registry. Security and Workplace have read-only access. A Standard User may only update their own vehicle make/model on their own record.
-27. **BR-027** An OCPP `StartTransaction` event MUST be preceded by an `Accepted` OCPP `Authorize` event for the same EID + parking slot + badge + charger combination within a configurable window (default 5 minutes). Otherwise the StartTransaction is rejected.
-28. **BR-028** An `Authorize` event MUST be Rejected with a machine-readable reason when any of the following are true: the EID is unknown; the user's eligibilityStatus is not `Active`; no Confirmed/Active booking exists for the user on the charger at the current time; the badge does not match the user's badge on the eligible-EV-user record; the parking slot does not match the charger's parking slot; the user has not acknowledged the current privacy notice version.
+27. **BR-027** When a booking is confirmed, the backend MUST call `POST /api/auth/tags` on the provided CSMS to create an RFID/idTag authorization window for the booking. The booking's `csmsSyncStatus` MUST reflect the outcome of this call (`Authorized` on 2xx; `AuthorizationFailed` on any non-2xx, timeout, or network error). A booking is considered fully operational only when `csmsSyncStatus = Authorized`.
+28. **BR-028** When a booking is cancelled, released, or overridden (by the user, by the system on no-show, or by admin/security/workplace), the backend MUST call `DELETE /api/auth/tags/:idTag` on the provided CSMS to revoke the authorization window. The booking's `csmsSyncStatus` MUST be set to `Revoked` on successful revocation; revocation failures MUST be surfaced and audit-logged.
+29. **BR-029** When a booking's `csmsSyncStatus` is `AuthorizationFailed`, the system MUST surface this state to the user and to admin/security/workplace via the notification audit/history and an intervention alert, and the booking MUST NOT be counted as Available/Reserved capacity (dashboard, reporting, and AI insights) until it is either successfully re-authorized with the CSMS or cancelled.
 
 ---
 
@@ -271,13 +289,15 @@ Brief reference: Section 10.5, BR006.
 | Charger | chargerId | Required, unique | Duplicate or missing | No | Yes |
 | Charger | locationId | Required, one of `NEX-TOWER`, `NEXTERACOM` | Unknown location | No | Yes |
 | Charger | status | One of enum (Available, Reserved, Charging, Blocked for Maintenance, Unavailable, Faulted) | Invalid value | No | Yes |
-| TelemetryEvent | eventType | One of BootNotification, StatusNotification, Authorize, StartTransaction, MeterValues, StopTransaction | Unknown eventType | No | Yes |
-| TelemetryEvent | chargerId | Required, exists | Unknown charger | No | Yes |
-| TelemetryEvent | timestamp | Required, ISO 8601, not in far future | Missing/invalid | No | Yes |
-| TelemetryEvent | energyKWh | ≥ 0 when present (MeterValues / StopTransaction) | Negative or non-numeric | No | Yes |
-| TelemetryEvent | transactionId | Required for Start/Stop/MeterValues | Missing on those events | No | Yes |
-| TelemetryEvent (Authorize) | userEid, badgeId, parkingSlot, chargerId | All four required for an Authorize event | Missing any | No | Yes |
-| TelemetryEvent (StartTransaction) | preceding Authorize | Must be preceded by an `Accepted` Authorize for same EID+badge+slot+charger within configurable window (default 5 min) | No prior Authorize | No | Yes |
+| Booking | csmsSyncStatus | One of `AuthorizationPending`, `Authorized`, `AuthorizationFailed`, `Revoked` | Invalid value | No | Yes |
+| Booking | csmsIdTag | Required when csmsSyncStatus ≠ `AuthorizationPending`; non-empty string matching the idTag format expected by the CSMS | Missing / invalid format | No | Yes |
+| CSMS call (POST /api/auth/tags) | stationId | Required, matches a known station in the local charger registry / CSMS station list | Missing or unknown station | No | Yes |
+| CSMS call (POST /api/auth/tags) | connectorId | Required (when provided by booking), matches a known connector for the station | Missing or unknown connector | No | Yes |
+| CSMS call (POST /api/auth/tags) | idTag, validFrom, validUntil | All three required; validUntil > validFrom; window aligned to booking window | Missing/invalid window | No | Yes |
+| CSMS response | HTTP status | 2xx → sync status `Authorized`; non-2xx, timeout, or network error → sync status `AuthorizationFailed` | Non-2xx without failure handling | No | Yes |
+| CSMS call (DELETE /api/auth/tags/:idTag) | idTag | Required, matches the booking's csmsIdTag | Missing or mismatched | No | Yes |
+| ChargingSession | energyKWh | ≥ 0; value retrieved from CSMS via `GET /api/sessions/:id` | Negative or non-numeric | No | Yes |
+| ChargingSession | source | Recorded as `CSMS` (or `CSMS-Simulator` for simulator-backed sessions) | Missing | No | Yes |
 | EligibleEVUser | userId | Required, unique | Missing / duplicate | No | Yes |
 | EligibleEVUser | workplaceRegistryEid | Required, unique | Missing / duplicate | No | Yes |
 | EligibleEVUser | badgeId | Required, unique | Missing / duplicate | No | Yes |
@@ -311,17 +331,17 @@ The table below lists every reminder template required by the MVP, traced to bri
 |---|---|---|---|---|---|---|---|
 | Booking confirmation (FR-REM-008) | Booking owner | In-app + Email + Teams | Immediately on successful booking creation | Info | View booking, Confirm session started | Yes | "Your booking on {charger} at {location} is confirmed for {startTime}–{endTime} ({vehicleMake} {vehicleModel})." |
 | Pre-session reminder (Session starting soon) | Booking owner | In-app + Email + Teams | 10 min before booking startTime | Info | View booking | Yes | "Your charging slot at {charger} starts in 10 minutes." |
-| Booking grace period warning (FR-REM-009) | Booking owner | In-app + Email + Teams | booking.startTime + 5 min, if no StartTransaction received | Warning | View booking, Confirm session started | Yes | "Your booking on {charger} starts soon and charging has not begun. The slot will be auto-released in {N} minutes." |
+| Booking grace period warning (FR-REM-009) | Booking owner | In-app + Email + Teams | booking.startTime + 5 min, if no active session reported by CSMS for the booking's idTag | Warning | View booking, Confirm session started | Yes | "Your booking on {charger} starts soon and charging has not begun. The slot will be auto-released in {N} minutes." |
 | Session-ending reminder (Charging session ending soon) | Booking owner | In-app + Email + Teams | 10 min before booking endTime | Warning | View booking, Release slot | Yes | "Your charging session ends in 10 minutes. Please prepare to release the charger." |
-| Session-ended alert (Charging session ended) | Booking owner | In-app + Email + Teams | On StopTransaction received | Info | View booking, Acknowledge end-of-session reminder | Yes | "Your charging session has ended. {energyKWh} kWh delivered." |
+| Session-ended alert (Charging session ended) | Booking owner | In-app + Email + Teams | When CSMS `GET /api/sessions/:id` reports the session as completed | Info | View booking, Acknowledge end-of-session reminder | Yes | "Your charging session has ended. {energyKWh} kWh delivered." |
 | Move vehicle prompt | Booking owner | In-app + Email + Teams | On session Completed, after end-of-session alert | Warning | Acknowledge | Yes | "Your charging session is complete. Please move your vehicle to free the slot." |
 | Release prompt (Slot release prompt) | Booking owner | In-app + Email + Teams | If session ends but booking still Active | Warning | Release slot | Yes | "Charging complete. Please release the charger for the next user." |
-| Auto-release on no-show (Auto-release/no-show notification) | Booking owner | In-app + Email + Teams | At booking.startTime + 15 min if no StartTransaction | Warning | View booking | Yes | "Your booking on {charger} was released because charging did not start in time." |
+| Auto-release on no-show (Auto-release/no-show notification) | Booking owner | In-app + Email + Teams | At booking.startTime + 15 min if no active session reported by CSMS for the booking's idTag | Warning | View booking | Yes | "Your booking on {charger} was released because charging did not start in time." |
 | Admin manual release confirmation | Affected user + acting admin/security/workplace | In-app + Email + Teams | Immediately on admin/security/workplace release/override action | Warning | View booking | Yes | "An operator released your booking on {charger}. Reason: {reason}." |
-| Charger fault during session | Booking owner | In-app + Email + Teams | On Faulted StatusNotification during Active session | Critical | View booking | Yes | "Your charger reported a fault. Session stopped. Please contact security." |
+| Charger fault during session | Booking owner | In-app + Email + Teams | When CSMS reports the connector as Faulted (via `GET /api/stations` or session detail) during an Active session | Critical | View booking | Yes | "Your charger reported a fault. Session stopped. Please contact security." |
 | Admin/security/workplace intervention alert — repeated no-shows (FR-REM-010) | Security, Workplace, Admin | In-app + Email + Teams | When a user accumulates ≥ 2 NoShow bookings in 7 days | Warning | View booking | Yes | "User {userId} has {N} no-shows in the last 7 days. Consider operational review." |
 | Admin/security/workplace intervention alert — late release (FR-REM-010) | Security, Workplace, Admin | In-app + Email + Teams | When a session continues past booking endTime + grace | Warning | Release slot | Yes | "Charger {charger} session is past its booking window. Manual release may be needed." |
-| Admin/security/workplace intervention alert — charger faulted (FR-REM-010) | Security, Workplace, Admin | In-app + Email + Teams | On Faulted StatusNotification | Critical | View booking | Yes | "Charger {charger} reported a fault during an active session. Operational intervention required." |
+| Admin/security/workplace intervention alert — charger faulted (FR-REM-010) | Security, Workplace, Admin | In-app + Email + Teams | When CSMS reports the connector as Faulted during an active session | Critical | View booking | Yes | "Charger {charger} reported a fault during an active session. Operational intervention required." |
 
 ---
 
@@ -330,11 +350,11 @@ The table below lists every reminder template required by the MVP, traced to bri
 | Metric | Definition | Data Source | Aggregation | Filter Dimensions | Audience |
 |---|---|---|---|---|---|
 | Total charging sessions | Count of ChargingSession in date range | session | count | location, charger, date range | Admin, Reporting/ESG, Mgmt |
-| Total energy consumed (kWh) | Sum of session.energyKWh | session / telemetry (MeterValues) | sum | location, charger, date range | Admin, Reporting/ESG |
+| Total energy consumed (kWh) | Sum of session.energyKWh | session (sourced from CSMS `GET /api/sessions/:id`) | sum | location, charger, date range | Admin, Reporting/ESG |
 | Average session duration | avg(stopTs − startTs) per completed session | session | avg | location, charger, date range | Admin |
 | Average energy per session | avg(energyKWh) per completed session | session | avg | location, charger, date range | Admin, Reporting/ESG |
-| Charger utilization rate | (time in Reserved+Charging) / operating window | charger state timeline (derived from telemetry) | % | location, charger, date range | Admin |
-| Peak charging hours | Distribution of StartTransaction by hour-of-day | telemetry | count by bucket | location, date range | Admin |
+| Charger utilization rate | (time in Reserved+Charging) / operating window | charger state timeline (derived from CSMS station/connector status snapshots) | % | location, charger, date range | Admin |
+| Peak charging hours | Distribution of session start times by hour-of-day | session (CSMS `GET /api/sessions`) | count by bucket | location, date range | Admin |
 | Most-used chargers | Ranked list by session count | session | count grouped by charger | location, date range | Admin |
 | Location comparison | Same metrics split by NEX Tower vs NEXTERACOM | derived | grouped | date range | Admin, Reporting/ESG, Mgmt |
 | Estimated CO₂ savings (kg) | `total kWh × 0.85 kgCO₂/kWh` (provisional) | derived | sum | location, date range | Reporting/ESG, Mgmt |
@@ -342,7 +362,7 @@ The table below lists every reminder template required by the MVP, traced to bri
 | Cancelled bookings | Count of bookings in Cancelled state | booking | count | location, date range | Admin |
 | Released bookings | Count in Released state | booking | count | location, date range | Admin |
 | No-show bookings | Count in NoShow state | booking | count | location, date range | Admin |
-| Faulted / Unavailable charger events | Count of StatusNotification transitions to Faulted/Unavailable | telemetry | count | location, charger, date range | Admin |
+| Faulted / Unavailable charger events | Count of connector transitions to Faulted/Unavailable observed via CSMS `GET /api/stations` polling | charger state timeline (from CSMS) | count | location, charger, date range | Admin |
 | Maintenance blocks | Count and total duration of Blocked for Maintenance windows | charger state timeline | count + duration | location, charger, date range | Admin |
 | Usage by vehicle category | Sessions and kWh aggregated by vehicleMake/vehicleModel (≥ 3 users per group) | session | grouped sum/count | location, date range | Admin, Reporting/ESG |
 | Notifications generated by channel | Count of notifications grouped by channel (InApp/Email/Teams) | notification audit | count | channel, trigger, date range | Admin, Workplace |
@@ -350,7 +370,7 @@ The table below lists every reminder template required by the MVP, traced to bri
 | Notification acknowledgment rate | % of in-app notifications marked read by audience | notification audit + readState | % | trigger, date range | Admin, Workplace |
 | No-show rate after reminders | NoShow bookings / total bookings, segmented by whether pre-session reminder was generated | booking + notification audit | % | location, date range | Admin, Workplace |
 | Admin/security/workplace intervention alerts triggered | Count of intervention alerts by sub-type (repeated no-shows / late release / charger fault) | notification audit | count by sub-type | date range | Security, Workplace, Admin |
-| Authorize outcomes | Count of Authorize events grouped by decision (Accepted / Rejected) and reason code | telemetry (Authorize) | count | charger, date range | Admin, Security |
+| CSMS authorization outcomes | Count of `POST /api/auth/tags` calls grouped by outcome (`Authorized`, `AuthorizationFailed`, `Revoked`) | booking.csmsSyncStatus history | count | charger, date range | Admin, Security |
 
 **CO₂ formula (stub):** `estimatedCO2SavingsKg = sum(energyKWh) * EMISSION_FACTOR_KG_PER_KWH` where `EMISSION_FACTOR_KG_PER_KWH = 0.85` (provisional, configurable).
 
@@ -362,7 +382,7 @@ Each AI capability MUST satisfy: input source = system data; output explicit; gr
 
 ### FR-AI-001 — Demand Forecasting
 - **Purpose:** Predict likely peak charging windows for the next 24h to inform fair-use adjustments.
-- **Input sources:** Booking history, ChargingSession history, telemetry timeline.
+- **Input sources:** Booking history, local ChargingSession history (populated from CSMS), CSMS station/connector status timeline.
 - **Output shape:** Ranked list of hour-of-day buckets with relative demand score and a short text summary.
 - **Grounding rules:** Must cite the time range and number of sessions used; must label "Based on simulated demo data" if any simulator-sourced data is in the range.
 - **Acceptance behavior:** If fewer than 10 sessions in the input window, return a "limited confidence" message and no point forecast.
@@ -390,7 +410,7 @@ Each AI capability MUST satisfy: input source = system data; output explicit; gr
 
 ### FR-AI-005 — Anomaly Flagging
 - **Purpose:** Flag unexpected energy spikes, unusually long sessions, repeated no-shows.
-- **Input sources:** Telemetry (MeterValues), Session, Booking.
+- **Input sources:** Local ChargingSession (meter values and energyKWh sourced from CSMS), Booking.
 - **Output shape:** List of anomaly entries: entityId, anomaly type, observed value, expected range, reason.
 - **Grounding rules:** Each anomaly must include the underlying datapoint.
 - **Acceptance behavior:** Empty list when nothing exceeds threshold.
@@ -470,40 +490,40 @@ All acceptance criteria below are testable by QA without further clarification. 
 ### 4.2 Real-Time Availability Dashboard — Acceptance Criteria
 
 1. **AC-DASH-01** Given the dashboard is open, When I load it, Then I see every registered charger with its current status colour-coded and labelled (Available, Reserved, Charging, Blocked for Maintenance, Unavailable, Faulted).
-2. **AC-DASH-02** Given a backend StatusNotification updates `NEX-TOWER-CH-01` to `Charging`, When the dashboard refresh interval elapses (≤5s), Then the charger card updates to `Charging` without a manual reload.
+2. **AC-DASH-02** Given the CSMS reports `NEX-TOWER-CH-01` connector as `Charging` (via `GET /api/stations` and `GET /api/sessions/active`), When the dashboard refresh interval elapses (≤5s), Then the charger card updates to `Charging` without a manual reload.
 3. **AC-DASH-03** Given I filter by NEXTERACOM, When the filter is applied, Then only NEXTERACOM chargers are shown.
 4. **AC-DASH-04** Given I view the dashboard on a 360px-wide mobile viewport, When I scroll vertically, Then all charger cards are readable with no horizontal scroll.
 5. **AC-DASH-05** Given I am a Standard User, When I view a `Charging` charger, Then the user identity and vehicle fields are masked or hidden.
 6. **AC-DASH-06** Given I am Security/Workplace/Admin, When I mark `NEXTERACOM-CH-02` `Blocked for Maintenance` with reason "cable damaged", Then its status updates and the change is audit-logged.
-7. **AC-DASH-07 (charger faulted mid-session — failure path)** Given a session is `Charging` and the charger reports `Faulted`, When the StatusNotification is ingested, Then the dashboard shows `Faulted`, the session moves to `Faulted`, and the user receives a fault notification.
+7. **AC-DASH-07 (charger faulted mid-session — failure path)** Given a session is `Charging` and the CSMS reports the connector as `Faulted` (via `GET /api/stations` or session detail), When the backend syncs at the configured interval, Then the dashboard shows `Faulted`, the local session moves to `Faulted`, and the user receives a fault notification.
 
-### 4.3 OCPP-Style Consumption Capture — Acceptance Criteria
+### 4.3 CSMS REST API Integration — Acceptance Criteria
 
-1. **AC-OCPP-01 (boot)** Given the simulator sends a `BootNotification` for `NEX-TOWER-CH-01`, When ingestion processes it, Then the charger is registered/known and status set to `Available`.
-2. **AC-OCPP-02 (start)** Given a Confirmed booking exists and an `Accepted` Authorize was recorded ≤ 5 minutes ago, When a `StartTransaction` event references its bookingId/chargerId/userId, Then a ChargingSession is created in `Charging` and charger status moves to `Charging`.
-3. **AC-OCPP-03 (meter values)** Given a session is `Charging`, When three sequential `MeterValues` events are received with cumulative energy 2.0, 4.0, 6.4 kWh, Then session.energyKWh is updated to 6.4 kWh.
-4. **AC-OCPP-04 (stop)** Given a session is `Charging`, When a `StopTransaction` is received, Then the session moves to `Completed`, charger returns to `Available`, and final energyKWh is persisted.
-5. **AC-OCPP-05 (unknown charger)** Given an event references `UNKNOWN-CH-99`, When it is sent to ingestion, Then it is rejected with HTTP 400 and not persisted.
-6. **AC-OCPP-06 (source label)** Given any event ingested from the simulator, When stored, Then `source = "Simulator"` is persisted.
-7. **AC-OCPP-07 (lifecycle)** Given the demo simulator runs the full scenario, When executed end to end, Then the charger flows Available → Reserved → Authenticating → Charging → Available within the demo window.
-8. **AC-OCPP-08 (failure path — fault during charging)** Given a session is `Charging`, When a `StatusNotification` with status=Faulted is received, Then the session moves to `Faulted` and the booking to `Released`/`Overridden` per BR-015.
-9. **AC-OCPP-09 (Authorize Accepted)** Given an eligible user with valid badge/parking-slot and a Confirmed booking on `NEX-TOWER-CH-01` at the current time, When an Authorize event is ingested with the matching EID, badgeId, parkingSlot, and chargerId, Then the response is `Accepted`, the session enters `Authenticating`, and an audit log entry is created.
-10. **AC-OCPP-10 (Authorize Rejected — no booking)** Given an eligible user with no Confirmed/Active booking on `NEX-TOWER-CH-01` at the current time, When an Authorize event is ingested, Then the response is `Rejected` with reason `NoActiveBooking`, no session is started, and an audit log entry is created.
-11. **AC-OCPP-11 (StartTransaction without Authorize)** Given no `Accepted` Authorize exists for the EID + badge + slot + charger within the last 5 minutes, When a StartTransaction event is ingested, Then the event is rejected with HTTP 400 and reason `MissingAuthorize`, and no ChargingSession is created.
-12. **AC-OCPP-12 (Authorize Rejected — privacy not acknowledged)** Given an eligible user has not acknowledged the current privacy notice version, When an Authorize event is ingested for that user, Then the response is `Rejected` with reason `PrivacyNotAcknowledged`.
+1. **AC-OCPP-01 (booking → CSMS authorization)** Given a Standard User submits a valid booking that passes all fair-use and privacy checks, When the booking creation completes, Then the backend calls `POST /api/auth/tags` on the CSMS with the booking's idTag, station, and time window, and the booking `csmsSyncStatus` is set to `Authorized` on a 2xx response.
+2. **AC-OCPP-02 (CSMS authorization failure)** Given the CSMS `POST /api/auth/tags` call returns a non-2xx response (or times out), When a booking is confirmed, Then `csmsSyncStatus = AuthorizationFailed`, the user sees an error message, the booking is not counted as Reserved capacity, and an admin/security/workplace intervention alert is raised.
+3. **AC-OCPP-03 (cancellation → CSMS revocation)** Given a booking with `csmsSyncStatus = Authorized` is cancelled by the user, When cancellation completes, Then the backend calls `DELETE /api/auth/tags/:idTag` on the CSMS and `csmsSyncStatus = Revoked` on success, and an audit log entry records the revocation.
+4. **AC-OCPP-04 (active session mapping)** Given the CSMS is available and at least one active session exists, When the backend polls `GET /api/sessions/active`, Then active sessions are mapped to local bookings by idTag/station, charger statuses on the dashboard reflect the CSMS connector status, and the mapping is refreshed within the configured poll interval.
+5. **AC-OCPP-05 (session energy persistence)** Given a completed charging session exists in the CSMS, When the backend calls `GET /api/sessions/:id`, Then the session's `energyKWh`, start/stop timestamps, and final status are persisted on the local ChargingSession record and visible in the reporting dashboard.
+6. **AC-OCPP-06 (station status sync)** Given `GET /api/stations` returns updated station and connector data, When the backend syncs at the configured interval, Then local charger status matches CSMS connector status within ≤5 seconds and the dashboard refreshes accordingly.
+7. **AC-OCPP-07 (end-to-end CSMS-driven lifecycle)** Given a confirmed booking with `csmsSyncStatus = Authorized`, When the provided simulator runs the full scenario (authorization → session start → meter values → session stop), Then the application shows the charger transitioning `Reserved → Charging → (session energy updating) → Completed → Available`, all driven by CSMS REST API data with no custom OCPP handlers in the custom application.
+8. **AC-OCPP-08 (maintenance block via CSMS)** Given Admin creates a maintenance block on `NEX-TOWER-CH-01` connector 1 with reason "firmware update", When the block is confirmed, Then the backend calls `PUT /api/stations/NEX-TOWER-CH-01/connectors/1/block` on the CSMS, the charger shows `Blocked for Maintenance` in the dashboard, and an audit log entry is created.
+9. **AC-OCPP-09 (remove maintenance block via CSMS)** Given a maintenance block is active on `NEX-TOWER-CH-01` connector 1, When Admin removes it, Then the backend calls `DELETE /api/stations/NEX-TOWER-CH-01/connectors/1/block` on the CSMS, the charger returns to `Available` (subject to other concurrent state), and an audit log entry is created.
+10. **AC-OCPP-10 (eligibility gate before CSMS call)** Given a user is not on the eligible-EV-user registry OR has not acknowledged the current privacy notice, When the user attempts to create a booking, Then the booking is rejected with HTTP 403 BEFORE any CSMS authorization call is made (no `POST /api/auth/tags` is issued).
+11. **AC-OCPP-11 (active authorization reconciliation)** Given a booking's local `csmsSyncStatus = Authorized` but the CSMS no longer lists the idTag in `GET /api/auth/tags?active=true`, When the backend reconciliation runs, Then the discrepancy is recorded, an admin/security/workplace intervention alert is raised, and the booking is flagged for review.
+12. **AC-OCPP-12 (privacy not acknowledged blocks CSMS call)** Given an eligible user has not acknowledged the current privacy notice version, When they attempt to create a booking, Then the request is rejected with HTTP 403 reason `PrivacyNotAcknowledged` and no `POST /api/auth/tags` call is issued to the CSMS.
 
 ### 4.4 Smart Reminders and Slot Release — Acceptance Criteria
 
 1. **AC-REM-01** Given a Confirmed booking starts at 10:00, When the clock reaches 09:50, Then the booking owner sees an in-app pre-session reminder.
 2. **AC-REM-02** Given a booking ends at 11:00, When the clock reaches 10:50, Then the owner sees an in-app session-ending reminder.
-3. **AC-REM-03 (no-show)** Given a booking starts at 10:00 and no StartTransaction is received, When clock reaches 10:15, Then the booking moves to `NoShow`, the charger returns to `Available`, and the user receives a no-show notification.
+3. **AC-REM-03 (no-show)** Given a booking starts at 10:00 and the CSMS reports no active session for the booking's idTag, When clock reaches 10:15, Then the booking moves to `NoShow`, the CSMS authorization is revoked via `DELETE /api/auth/tags/:idTag`, the charger returns to `Available`, and the user receives a no-show notification.
 4. **AC-REM-04** Given an admin/security/workplace user releases a user's booking with reason "operational", When released, Then the user sees an in-app notification with the reason.
 5. **AC-REM-05** Given a session has `Completed` and the booking is still `Active`, When the system processes the stop event, Then the user receives a release prompt notification.
 6. **AC-REM-06** Given I open the notifications list, When the page loads, Then I see all my notifications ordered by most recent first.
 7. **AC-REM-07 (booking confirmation)** Given I create a booking that passes all validations, When the booking is created, Then I immediately see a "Booking confirmation" in-app notification AND the notification audit/history contains one email payload and one Teams Adaptive Card payload for the same trigger, each linked to my bookingId.
-8. **AC-REM-08 (grace period warning)** Given my booking starts at 10:00 with grace period 15 min and no StartTransaction is received, When the clock reaches 10:05, Then I receive a "Booking grace period warning" in-app notification with severity Warning, and the message states the slot will be auto-released in 10 minutes.
+8. **AC-REM-08 (grace period warning)** Given my booking starts at 10:00 with grace period 15 min and the CSMS reports no active session for my idTag, When the clock reaches 10:05, Then I receive a "Booking grace period warning" in-app notification with severity Warning, and the message states the slot will be auto-released in 10 minutes.
 9. **AC-REM-09 (intervention alert — repeated no-shows)** Given user U has accumulated 2 NoShow bookings within the past 7 days, When the second NoShow is recorded, Then Security, Workplace, and Admin users receive an "Admin/security/workplace intervention alert" in-app notification referencing user U and the no-show count.
-10. **AC-REM-10 (intervention alert — charger fault)** Given a session is Charging on charger C, When a StatusNotification with status=Faulted is ingested, Then Security, Workplace, and Admin users receive an intervention alert with severity Critical referencing charger C, in addition to the user-facing fault notification (AC-DASH-07).
+10. **AC-REM-10 (intervention alert — charger fault)** Given a session is Charging on charger C, When the CSMS reports the connector as Faulted (via `GET /api/stations` or session detail) during the active session, Then Security, Workplace, and Admin users receive an intervention alert with severity Critical referencing charger C, in addition to the user-facing fault notification (AC-DASH-07).
 11. **AC-REM-11 (email preview fallback)** Given the email channel is not configured for live delivery, When a notification trigger fires, Then a realistic email payload (recipient, subject, body) is generated and stored in the notification audit with deliveryStatus="Previewed", and is viewable from the admin notification audit/history view.
 12. **AC-REM-12 (Teams Adaptive Card preview fallback)** Given the Teams channel is not configured for live delivery, When a notification trigger fires, Then a valid Adaptive Card JSON payload is generated and stored in the notification audit with deliveryStatus="Previewed", and the JSON parses against the Adaptive Card schema.
 13. **AC-REM-13 (Adaptive Card actions)** Given a generated Adaptive Card for a "Session ending soon" reminder, When inspected, Then it contains the actions "View booking" and "Release slot", and each action's target URL deep-links to the corresponding page in the web application.
@@ -521,7 +541,7 @@ All acceptance criteria below are testable by QA without further clarification. 
 3. **AC-REP-03** Given some sessions are simulator-sourced, When the dashboard loads, Then a "Based on simulated demo data" label is visible on the affected widgets.
 4. **AC-REP-04** Given I filter by NEX Tower for last 24h, When the filter applies, Then only NEX Tower data within 24h is shown.
 5. **AC-REP-05** Given there are zero sessions in the selected window, When the dashboard loads, Then each metric shows `0` (or "No data") without errors.
-6. **AC-REP-06** Given chargers reported `Faulted` events, When the dashboard loads, Then the count of faulted events is displayed and matches telemetry count.
+6. **AC-REP-06** Given chargers reported `Faulted` events via the CSMS station status feed, When the reporting dashboard loads, Then the count of faulted events is displayed and matches the CSMS-sourced station/connector state timeline.
 7. **AC-REP-07 (vehicle aggregation)** Given at least 3 distinct users have sessions on vehicleMake="Tesla", When I view "Usage by vehicle category", Then a row for "Tesla" appears with aggregated session count and kWh; groups with fewer than 3 users are hidden or rolled up under "Other".
 
 ### 4.6 Responsible AI Layer — Acceptance Criteria
@@ -553,7 +573,7 @@ All acceptance criteria below are testable by QA without further clarification. 
 ### 4.9 Audit Log — Acceptance Criteria
 
 1. **AC-AUDIT-01 (override audit)** Given Admin performs a 1h-cap override with reason "VIP visit", When the booking is created, Then an audit log entry exists with action=`BookingOverride`, actorUserId=Admin, entityType=`Booking`, entityId=<new bookingId>, reason="VIP visit", and a timestamp.
-2. **AC-AUDIT-02 (Authorize decisions)** Given an Authorize event is ingested and rejected with reason `BadgeMismatch`, When the audit log is queried, Then an entry exists with action=`AuthorizeRejected`, reason=`BadgeMismatch`, and references to EID, badgeId, parkingSlot, chargerId.
+2. **AC-AUDIT-02 (CSMS authorization decisions)** Given a `POST /api/auth/tags` call to the CSMS fails for a booking, When the audit log is queried, Then an entry exists with action=`CsmsAuthorizationFailed`, the CSMS HTTP status / error reason, and references to the bookingId, userId, idTag, and stationId.
 3. **AC-AUDIT-03 (immutability)** Given an audit log entry exists, When any role attempts to delete or modify it via the application, Then the request is rejected with HTTP 403/405 and the entry remains intact.
 
 ### 4.10 Admin Operations — Maintenance Block — Acceptance Criteria
@@ -592,9 +612,9 @@ Aligned with brief Section 17.
 | State | Meaning |
 |---|---|
 | NotStarted | Session has not started yet (booking confirmed, waiting for Authorize/Start). |
-| Authenticating | Contactless/OCPP Authorize handshake in progress. |
+| Authenticating | CSMS RFID/idTag authorization in progress (booking → `POST /api/auth/tags` issued, awaiting CSMS confirmation or session start). |
 | Charging | Charging is currently in progress. |
-| Completed | Charging ended normally (StopTransaction). |
+| Completed | Charging ended normally (CSMS reports session as completed via `GET /api/sessions/:id`). |
 | StoppedByUser | User stopped/released the session before normal end. |
 | StoppedByAdmin | Security/Workplace/Admin stopped/released the session. |
 | Faulted | Session ended or paused due to charger fault. |
@@ -624,13 +644,13 @@ The full system MUST satisfy the following end-to-end scenario (aligned with bri
 5. User books a time slot of up to 1 hour with vehicle make/model; the 1h/day fair-use rule is visible.
 6. The system validates fair-use rules (no overlap, ≤1h, no other active booking, eligible user, privacy acknowledged) and confirms the booking.
 7. The selected charger transitions to `Reserved`.
-8. The user receives a booking confirmation and pre-session reminder.
-9. A simulated `Authorize` event (EID + parking slot + badge) is ingested. If Accepted, the session enters `Authenticating`.
-10. A simulated `StartTransaction` OCPP-style event is ingested and starts the charging transaction; the charger transitions to `Charging` within 5 seconds.
-11. Simulated `MeterValues` events update the session's cumulative energy consumption, visible on the dashboard.
+8. The booking confirmation triggers `POST /api/auth/tags` on the provided CSMS, creating an RFID/idTag authorization window for the booked slot. The booking's `csmsSyncStatus` becomes `Authorized`. The user receives a booking confirmation and pre-session reminder.
+9. The provided simulator (driven by the CSMS) starts a charging session at the station using the authorized idTag. The CSMS reports the active session via `GET /api/sessions/active`; the backend maps it to the local booking.
+10. The dashboard reflects the connector transition to `Charging` within ≤5 seconds, driven by `GET /api/stations` and `GET /api/sessions/active` polling.
+11. The application polls the CSMS for meter values via `GET /api/sessions/:id` and updates the energy display (cumulative `energyKWh`) on the dashboard.
 12. The user receives an in-app end-of-session reminder before the booking endTime.
-13. A `StopTransaction` event ends the charging session; session moves to `Completed`. The user receives a session-ended alert and a move-vehicle prompt.
-14. The charger transitions back to `Available`.
+13. The CSMS closes the session; `GET /api/sessions/:id` returns the completed session with final `energyKWh`. The local ChargingSession is updated to `Completed`. The user receives a session-ended alert and a move-vehicle prompt.
+14. The connector status returned by `GET /api/stations` transitions back to `Available` and is reflected on the dashboard.
 15. Admin views bookings, sessions, charger status, maintenance blocks, the audit log, and notification audit/history.
 16. The reporting and sustainability dashboard updates with the new session's energy, utilization, CO₂ estimate, and notification metrics, with "Based on simulated demo data" visible.
 17. The AI insight panel generates a grounded NL summary, forecast, or recommendation referencing the new data, with a confidence label and (where applicable) the 1h/day baseline cited.
@@ -643,8 +663,8 @@ The full system MUST satisfy the following end-to-end scenario (aligned with bri
 1. Standard Users authenticate before booking; auth is simplified (mock login or role selector with seeded users).
 2. Charger registry and IDs are fixed and seeded at start (NEX-TOWER-CH-01..N, NEXTERACOM-CH-01..M).
 3. One connector per charger for the MVP; no compatibility matching.
-4. OCPP-style telemetry is simulated; telemetry follows realistic charger lifecycle concepts and includes Authorize.
-5. MeterValues are produced by the simulator or a pre-recorded fallback script.
+4. Charging infrastructure data (station status, sessions, meter values, energy) is sourced from the provided NexLevel CSMS REST API. The custom application does NOT implement any OCPP server, OCPP WebSocket handlers, or raw OCPP message ingestion. The CSMS owns the OCPP 1.6J protocol layer with simulator-backed charge points.
+5. Meter values and energy consumption are retrieved from the CSMS via `GET /api/sessions/:id`. A pre-recorded fallback session scenario (seeded local data) is available for demo fallback if the live CSMS/simulator cannot be started.
 6. No payment or billing integration.
 7. CO₂ savings use a fixed coefficient — provisional value **0.85 kgCO₂/kWh** (configurable, displayed alongside the metric).
 8. Real-time updates use either polling (e.g., every 3–5s) or SignalR/WebSocket — final choice by Solution Architect.
@@ -667,9 +687,9 @@ The full system MUST satisfy the following end-to-end scenario (aligned with bri
 25. Teams delivery, if implemented, uses Incoming Webhooks, Power Automate, or Microsoft Graph — final choice by Solution Architect based on tenant access available on the day.
 26. The eligible-EV-user registry is seeded with demo users covering at least: an eligible Standard User with vehicle make/model and privacy acknowledged, an eligible Standard User without privacy acknowledgement, a Suspended user, and an unknown EID (for negative Authorize test cases).
 27. Privacy notice content for the MVP is a single agreed text (v1) seeded with the application. Re-acknowledgement on version change is supported (FR-PRIV-005) but not exercised by default in the demo.
-28. The Authorize window (time between an Accepted Authorize and a corresponding StartTransaction) defaults to **5 minutes**, configurable (BR-027).
+28. The CSMS RFID/idTag authorization window (`validFrom`–`validUntil` sent to `POST /api/auth/tags`) is aligned to the booking window. The booking-to-CSMS sync is expected to complete in under **5 seconds**; otherwise the booking is flagged `AuthorizationPending` until the CSMS responds, after which it becomes `Authorized` or `AuthorizationFailed` (BR-027).
 29. Vehicle aggregation reports apply a minimum group size of **3 users** to protect privacy (FR-REP-017).
-30. The Audit Log is the primary source of truth for "who did what when" across overrides, releases, maintenance blocks, Authorize decisions, eligible-user changes, privacy acknowledgements, and telemetry-driven state changes.
+30. The Audit Log is the primary source of truth for "who did what when" across overrides, releases, maintenance blocks, CSMS authorization outcomes (`Authorized`, `AuthorizationFailed`, `Revoked`), eligible-user changes, privacy acknowledgements, and CSMS-driven state changes.
 
 ---
 
@@ -695,10 +715,13 @@ The full system MUST satisfy the following end-to-end scenario (aligned with bri
 - **Q18 — Rate limiting per user / per channel.** Provisional answer: **no rate limit in MVP; cross-channel consistency (BR-019) prevents duplicate intent within a single trigger but does not throttle distinct triggers.**
 - **Q19 — Repeated no-show threshold value and window.** Provisional answer: **≥ 2 NoShow bookings within 7 days, configurable.** Confirm with operations.
 - **Q20 — Pending booking state usage in MVP.** Why it matters: the brief lists Pending as a valid booking state but the MVP currently transitions bookings straight to Confirmed. Provisional answer: **persist Pending in the data model and state enum, but in the MVP path a booking transitions Pending → Confirmed atomically as part of a successful create. A separate approval flow is deferred post-hackathon.** Confirm with stakeholders if any approval gate is required for the demo.
-- **Q21 — Authorize-to-StartTransaction window.** Why it matters: controls how strict the OCPP handshake is, affects demo timing. Provisional answer: **5 minutes**, configurable (BR-027). Confirm acceptable for demo.
+- **Q21 — CSMS authorization window alignment.** Why it matters: the `validFrom`–`validUntil` window sent to `POST /api/auth/tags` must align with the booking window so the CSMS accepts the user's idTag at the right time. Provisional answer: **validFrom = booking.startTime − 5 minutes; validUntil = booking.endTime + grace period (15 minutes)**, configurable (BR-027). Confirm acceptable with the CSMS provider on the day.
 - **Q22 — Vehicle aggregation minimum group size.** Why it matters: privacy protection for vehicle-segmented reports. Provisional answer: **3 users per group** below which the row is suppressed or rolled up under "Other" (FR-REP-017). Confirm with privacy/legal stakeholder.
 - **Q23 — Workplace User override scope.** Why it matters: the brief allows Workplace users to support booking operations but does not state explicitly whether Workplace can override the 1h cap. Provisional answer: **Workplace can override the 1h cap and release bookings under the same audit/reason rules as Security; Admin retains the ability to revoke this permission via configuration.** Confirm with stakeholders.
 - **Q24 — Privacy notice versioning ownership.** Why it matters: who publishes new versions, and when. Provisional answer: **Admin role can publish a new privacy notice version; previous acknowledgements are retained for audit; users must re-acknowledge before next booking (FR-PRIV-005).** Confirm with legal/privacy.
+- **Q25 — CSMS base URL and authentication.** Why it matters: the backend needs to know how to connect to the provided NexLevel CSMS REST API. Provisional answer: **configured via environment variable `CSMS_BASE_URL`; auth scheme TBD based on what the provided NexLevel CSMS requires (API key header, Basic auth, or no auth for local dev).** Confirm with the NexLevel CSMS provider on the day.
+- **Q26 — CSMS polling interval for dashboard.** Why it matters: drives the real-time feel of the charger dashboard versus load on the CSMS. Provisional answer: **5-second polling for the dashboard** (FR-OCPP-003, FR-DASH-004). Confirm with Solution Architect; consider SignalR/WebSocket only if CSMS exposes push.
+- **Q27 — CSMS authorization idTag format.** Why it matters: the RFID/idTag sent to `POST /api/auth/tags` must match what the provided simulator/CSMS expects. Provisional answer: **derived from the user's workplace registry EID or a UUID generated per booking; persisted on the booking as `csmsIdTag`**. Confirm exact format with NexLevel CSMS documentation on the day.
 
 ---
 
@@ -706,6 +729,9 @@ The full system MUST satisfy the following end-to-end scenario (aligned with bri
 
 Restated from the use-case brief, Section 12 — Out of Scope:
 
+- **Custom OCPP WebSocket server implementation.** The provided NexLevel CSMS owns OCPP protocol handling.
+- **Raw OCPP message handling (BootNotification, StatusNotification, Authorize, StartTransaction, MeterValues, StopTransaction).** All charging infrastructure data comes from the provided CSMS REST API; the custom application must not parse or emit raw OCPP messages.
+- Custom OCPP-style telemetry ingestion endpoint in the custom backend (replaced by CSMS REST API consumption).
 - Real OCPP protocol implementation against physical chargers.
 - Physical charger hardware integration.
 - SMS or mobile push notification delivery.
@@ -729,7 +755,7 @@ Restated from the use-case brief, Section 12 — Out of Scope:
 |---|---|---|
 | Slot Booking | FR-BOOK-001..013 | 7, 8, 9 (BR001, BR002, BR007, BR010, BR012), 10.1, 10.4, 13 |
 | Real-Time Availability Dashboard | FR-DASH-001..007 | 7, 9 (BR003), 10.2, 20.1 |
-| OCPP-Style Consumption Capture & Contactless Auth | FR-OCPP-001..014 | 7, 9 (BR004, BR005), 10.3, 10.4, 13, 14, 17 |
+| CSMS REST API Integration | FR-OCPP-001..014 | 6.1, 7, 9 (BR004, BR005), 10.3, 10.4, 13, 14, 17, 18 |
 | Smart Reminders and Slot Release | FR-REM-001..019 | 7, 9 (BR008, BR009), 10.6, 13, 19, 20 |
 | Reporting and Sustainability Dashboard | FR-REP-001..017 | 7, 10.4, 10.7, 16, 20 |
 | Responsible AI Layer | FR-AI-001..011 | 7, 8, 10.8, 16, 20 |
@@ -738,6 +764,6 @@ Restated from the use-case brief, Section 12 — Out of Scope:
 | Audit Log | FR-AUDIT-001..005 | 10.3, 10.5, 10.10, 16, 17, 20 (Auditability) |
 | Admin Operations — Maintenance Blocks | FR-ADMIN-001..003 | 9 (BR012), 10.2, 10.10 |
 | Eligible EV User Management | FR-USER-001..006 | 7, 9 (BR006), 10.5 |
-| Business Rules (cross-cutting) | BR-001..028 | 7, 8, 9, 10, 13, 16, 17, 19 |
+| Business Rules (cross-cutting) | BR-001..029 | 6.1, 7, 8, 9, 10, 13, 16, 17, 18, 19 |
 | Booking and Session State Reference | Section 11 | 17 |
 | Demo Journey | Section 12 | 11 |
