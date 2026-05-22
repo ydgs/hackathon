@@ -69,10 +69,12 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 // ── Background Services (P1) ──────────────────────────────────────────────
 // SessionSyncService: polls CSMS every 30s to sync active sessions into local DB
 // NoShowCheckerService: marks Confirmed bookings as NoShow after grace period
-// ReminderSchedulerService: sends in-app notifications for upcoming sessions
+// ReminderSchedulerService: sends in-app notifications for upcoming sessions (US-021/US-022)
+// InterventionAlertService: fans-out operational alerts to Security/Workplace/Admin (US-023)
 builder.Services.AddHostedService<SessionSyncService>();
 builder.Services.AddHostedService<NoShowCheckerService>();
 builder.Services.AddHostedService<ReminderSchedulerService>();
+builder.Services.AddHostedService<InterventionAlertService>();
 
 // ── Controllers ───────────────────────────────────────────────────────────
 builder.Services.AddControllers()

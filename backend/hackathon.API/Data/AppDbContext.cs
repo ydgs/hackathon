@@ -246,7 +246,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Payload).HasColumnType("jsonb");
             e.Property(x => x.DeliveryStatus).HasConversion<string>().HasMaxLength(12).IsRequired();
             e.Property(x => x.ReadState).HasDefaultValue(false);
-            e.Property(x => x.CorrelationId).HasMaxLength(36).IsRequired();
+            e.Property(x => x.CorrelationId).HasMaxLength(100).IsRequired();
 
             e.HasIndex(x => x.AudienceUserId).HasDatabaseName("ix_notifications_audience_user_id");
             e.HasIndex(x => x.Timestamp).HasDatabaseName("ix_notifications_timestamp");

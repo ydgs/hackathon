@@ -200,6 +200,30 @@ public class BookingService : IBookingService
 
         var user = await _db.Users.FindAsync(effectiveUserId);
 
+        // US-021/US-022: Send BookingConfirmation in-app notification
+        var startLocal = request.StartTime.ToString("HH:mm");
+        var endLocal = request.EndTime.ToString("HH:mm");
+        var confirmNotification = new Notification
+        {
+            Id = Guid.NewGuid(),
+            AudienceUserId = effectiveUserId,
+            TriggerEvent = NotificationTrigger.BookingConfirmation,
+            Channel = NotificationChannel.InApp,
+            Severity = NotificationSeverity.Info,
+            Title = "Booking confirmed",
+            Body = $"Your booking at {charger.Location?.Name ?? "the charging station"} ({charger.DisplayName}) is confirmed for {startLocal}–{endLocal}. Vehicle: {request.VehicleMake} {request.VehicleModel}. Your session tag is {idTag}.",
+            DeliveryStatus = NotificationDeliveryStatus.Sent,
+            ReadState = false,
+            CorrelationId = $"booking-confirm-{booking.Id}",
+            LinkedBookingId = booking.Id,
+            LinkedChargerId = booking.ChargerId,
+            Timestamp = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        _db.Notifications.Add(confirmNotification);
+        await _db.SaveChangesAsync();
+
         return (MapToDto(booking, charger, user!), null, 201);
     }
 

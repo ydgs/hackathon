@@ -551,3 +551,116 @@ All authenticated requests require header: `Authorization: Bearer <jwt_token>`
 **Auth:** None
 
 **Expected response (401)**
+
+---
+
+## TC-041 — BookingConfirmation notification on booking creation (US-021/US-022)
+
+**Endpoint:** `POST /bookings` then `GET /notifications`
+**Auth:** Alice (StandardUser, eligible, privacy acknowledged)
+**Body (POST):** Valid booking (future startTime, chargerId for an Available charger, vehicleMake, vehicleModel)
+
+**Expected:** After successful booking (201), `GET /notifications` returns a notification with `triggerEvent: "BookingConfirmation"` for Alice, with `linkedBookingId` matching the created booking.
+
+---
+
+## TC-042 — AutoReleaseNoShow notification (US-022)
+
+**Precondition:** Booking in state Confirmed with startTime > 15 minutes in the past and no active session.
+**Trigger:** Wait up to 60 seconds for NoShowCheckerService to run.
+
+**Expected:** `GET /bookings/{id}` shows `state: "NoShow"`. `GET /notifications` for the booking user shows a notification with `triggerEvent: "AutoReleaseNoShow"`.
+
+---
+
+## TC-043 — SessionStartingSoon reminder (US-022)
+
+**Precondition:** Confirmed booking with startTime exactly 10 minutes in the future.
+**Trigger:** Wait up to 60 seconds for ReminderSchedulerService.
+
+**Expected:** `GET /notifications` shows notification with `triggerEvent: "SessionStartingSoon"`.
+**Deduplication check:** Waiting another minute should NOT create a second notification with the same correlation ID.
+
+---
+
+## TC-044 — ChargingSessionEndingSoon reminder (US-022)
+
+**Precondition:** Active booking with endTime exactly 5 minutes in the future.
+**Trigger:** Wait up to 60 seconds.
+
+**Expected:** `GET /notifications` shows `triggerEvent: "ChargingSessionEndingSoon"`.
+
+---
+
+## TC-045 — ChargingSessionEnded and MoveVehiclePrompt notifications (US-022)
+
+**Precondition:** ChargingSession with state=Completed and StopTime within the last 2 minutes.
+**Trigger:** Wait up to 60 seconds.
+
+**Expected:** Two notifications appear for the booking user: `triggerEvent: "ChargingSessionEnded"` and `triggerEvent: "MoveVehiclePrompt"`.
+
+---
+
+## TC-046 — SlotReleasePrompt notification (US-022)
+
+**Precondition:** Booking in Active state with endTime + 15 minutes in the past.
+**Trigger:** Wait up to 60 seconds.
+
+**Expected:** `GET /notifications` for the user shows `triggerEvent: "SlotReleasePrompt"` with `severity: "Critical"`.
+
+---
+
+## TC-047 — Intervention alert for repeated no-shows (US-023)
+
+**Precondition:** User alice has 2+ bookings in state=NoShow with updatedAt within the last 7 days.
+**Trigger:** Wait up to 5 minutes for InterventionAlertService.
+
+**Expected:** Login as carol (Security) or dave (Admin). `GET /notifications` shows a notification with `triggerEvent: "AdminSecurityWorkplaceInterventionAlert"` mentioning alice's repeated no-shows. Notification appears for ALL Security/Workplace/Admin users.
+
+---
+
+## TC-048 — Intervention alert for late release (US-023)
+
+**Precondition:** Booking in Active state with endTime + 15+ minutes in the past.
+**Trigger:** Wait up to 5 minutes.
+
+**Expected:** Security/Admin users receive `AdminSecurityWorkplaceInterventionAlert` notification for the late release.
+
+---
+
+## TC-049 — Intervention alert for charger fault during active session (US-023)
+
+**Precondition:** Charger with status=Faulted that has a ChargingSession in state=Charging.
+**Trigger:** Wait up to 5 minutes.
+
+**Expected:**
+- Session user receives `AdminSecurityWorkplaceInterventionAlert` with `severity: "Critical"` describing the charger fault.
+- Security/Admin users receive the same alert (operator version).
+
+---
+
+## TC-050 — Notification audit view (US-025)
+
+**Endpoint:** `GET /notifications/audit`
+**Auth:** Carol (Security)
+
+**Expected response (200):**
+```json
+{
+  "data": [
+    {
+      "id": "...",
+      "audienceUserId": "...",
+      "audienceUserDisplayName": "...",
+      "triggerEvent": "AdminSecurityWorkplaceInterventionAlert",
+      "channel": "InApp",
+      "severity": "Warning",
+      "deliveryStatus": "Sent",
+      ...
+    }
+  ],
+  "pagination": { ... }
+}
+```
+
+**Standard user attempting audit:** `GET /notifications/audit` as Alice → Expected **403 Forbidden**.

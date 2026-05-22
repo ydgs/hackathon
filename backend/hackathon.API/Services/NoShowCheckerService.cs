@@ -116,7 +116,7 @@ public class NoShowCheckerService : BackgroundService
 
         await db.SaveChangesAsync(ct);
 
-        // Audit log one batch entry
+        // Audit log + AutoRelease notification per no-show booking
         foreach (var booking in overdueBookings)
         {
             await audit.LogAsync(
@@ -124,7 +124,35 @@ public class NoShowCheckerService : BackgroundService
                 "BookingAutoNoShow", "Booking",
                 booking.Id.ToString(), "System",
                 reason: $"Grace period of {gracePeriodMinutes} minutes exceeded with no session started.");
+
+            // US-022: AutoReleaseNoShow notification to user
+            var correlationId = $"noshow-autorelease-{booking.Id}";
+            var alreadySent = await db.Notifications.AnyAsync(n => n.CorrelationId == correlationId, ct);
+            if (!alreadySent)
+            {
+                db.Notifications.Add(new Notification
+                {
+                    Id = Guid.NewGuid(),
+                    AudienceUserId = booking.UserId,
+                    TriggerEvent = NotificationTrigger.AutoReleaseNoShow,
+                    Channel = NotificationChannel.InApp,
+                    Severity = NotificationSeverity.Warning,
+                    Title = "Your booking was automatically released",
+                    Body = $"Your booking (starting {booking.StartTime:HH:mm}) was automatically released after {gracePeriodMinutes} minutes without a charging session starting. The charger has been freed for other users.",
+                    DeliveryStatus = NotificationDeliveryStatus.Sent,
+                    ReadState = false,
+                    CorrelationId = correlationId,
+                    LinkedBookingId = booking.Id,
+                    LinkedChargerId = booking.ChargerId,
+                    Timestamp = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
         }
+
+        if (overdueBookings.Any())
+            await db.SaveChangesAsync(ct);
     }
 
     private static async Task<int> GetGracePeriodMinutes(AppDbContext db)
