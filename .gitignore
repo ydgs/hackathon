@@ -6,3 +6,6 @@
 # Azure DevOps client logs
 logs/azure-devops-client.log
 logs/
+
+# Node dependencies
+node_modules/
