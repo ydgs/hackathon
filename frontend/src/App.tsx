@@ -10,7 +10,8 @@ import { LoginPage } from './pages/LoginPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 
 // Main pages
-import { DashboardPage } from './pages/DashboardPage';
+import { DashboardPage as OverviewDashboardPage } from './pages/OverviewDashboardPage';
+import { ChargersPage } from './pages/ChargersPage';
 import { BookingNewPage } from './pages/BookingNewPage';
 import { BookingDetailPage } from './pages/BookingDetailPage';
 import { MyBookingsPage } from './pages/MyBookingsPage';
@@ -66,7 +67,16 @@ function AppRoutes() {
           path="/dashboard"
           element={
             <RequirePrivacyAck>
-              <DashboardPage />
+              <OverviewDashboardPage />
+            </RequirePrivacyAck>
+          }
+        />
+
+        <Route
+          path="/chargers"
+          element={
+            <RequirePrivacyAck>
+              <ChargersPage />
             </RequirePrivacyAck>
           }
         />

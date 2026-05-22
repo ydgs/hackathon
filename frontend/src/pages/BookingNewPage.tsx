@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ChevronLeftIcon, BoltIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, BoltIcon, CheckCircleIcon, ExclamationTriangleIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import type { Charger, Booking } from '../types';
 import { getChargers } from '../services/charger.service';
 import { createBooking } from '../services/booking.service';
@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { FormField, inputClasses } from '../components/ui/FormField';
 import { CsmsSyncBadge } from '../components/ui/StatusBadge';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
+import { BookingSlotPicker, generateHourlySlots } from '../components/booking/BookingSlotPicker';
 import { useAuth } from '../hooks/useAuth';
 import { cn } from '../lib/classNames';
 import { formatTimeWindow } from '../lib/formatters';
@@ -18,13 +19,15 @@ export function BookingNewPage() {
   const { currentUser } = useAuth();
 
   const preSelectedChargerId = searchParams.get('chargerId') ?? '';
+  const preStartTime = searchParams.get('startTime') ?? '';
+  const preEndTime   = searchParams.get('endTime')   ?? '';
 
   const [chargers, setChargers] = useState<Charger[]>([]);
   const [chargersLoading, setChargersLoading] = useState(true);
 
   const [chargerId, setChargerId] = useState(preSelectedChargerId);
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startTime, setStartTime] = useState(preStartTime);
+  const [endTime, setEndTime]     = useState(preEndTime);
   const [vehicleMake, setVehicleMake] = useState(currentUser?.eligibility?.vehicleMake ?? '');
   const [vehicleModel, setVehicleModel] = useState(currentUser?.eligibility?.vehicleModel ?? '');
 
@@ -41,6 +44,23 @@ export function BookingNewPage() {
       })
       .finally(() => setChargersLoading(false));
   }, []);
+
+  // Hour-based slot picker — selecting a slot sets a 1-hour window.
+  const nowHour = new Date().getHours();
+  const startSlots = generateHourlySlots(6, 20, {
+    pastHourCutoff: nowHour,
+    bestHours: [11, 12],
+    peakHours: [9, 10],
+    reservedHours: [],
+  });
+
+  const selectedStartHour = startTime ? Number(startTime.split(':')[0]) : null;
+  const endSlots = generateHourlySlots(7, 21, {
+    pastHourCutoff: (selectedStartHour ?? nowHour) + 1,
+  }).map((s) => ({
+    ...s,
+    disabled: s.disabled || (selectedStartHour != null && Number(s.value.split(':')[0]) > selectedStartHour + 1),
+  }));
 
   // Duration calculation
   const durationMinutes = (() => {
@@ -204,35 +224,45 @@ export function BookingNewPage() {
             </select>
           </FormField>
 
-          {/* Start / End time */}
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label="Start time" htmlFor="start-time" error={errors.startTime} required>
-              <input
-                id="start-time"
-                type="time"
-                value={startTime}
-                onChange={(e) => {
-                  setStartTime(e.target.value);
-                  setErrors((p) => ({ ...p, startTime: '' }));
-                }}
-                aria-required="true"
-                className={cn(inputClasses(!!errors.startTime))}
-              />
-            </FormField>
-            <FormField label="End time" htmlFor="end-time" error={errors.endTime} required>
-              <input
-                id="end-time"
-                type="time"
-                value={endTime}
-                onChange={(e) => {
-                  setEndTime(e.target.value);
-                  setErrors((p) => ({ ...p, endTime: '' }));
-                }}
-                aria-required="true"
-                className={cn(inputClasses(!!errors.endTime))}
-              />
-            </FormField>
+          {/* Date row */}
+          <div className="flex items-center gap-2 text-sm text-gray-300">
+            <CalendarDaysIcon className="h-4 w-4 text-brand-300" aria-hidden="true" />
+            <span className="font-semibold text-white">Today</span>
+            <span className="text-gray-500">·</span>
+            <span>{new Date().toLocaleDateString('en-MU', { weekday: 'long', day: '2-digit', month: 'short' })}</span>
           </div>
+
+          {/* Start slot picker */}
+          <FormField label="Start time" htmlFor="start-time" error={errors.startTime} required>
+            <BookingSlotPicker
+              slots={startSlots}
+              selectedValue={startTime}
+              onChange={(v) => {
+                setStartTime(v);
+                // Auto-pick end = start + 1 hour for the 60-min cap
+                const h = Number(v.split(':')[0]);
+                setEndTime(`${String(h + 1).padStart(2, '0')}:00`);
+                setErrors((p) => ({ ...p, startTime: '', endTime: '' }));
+              }}
+              ariaLabel="Select a start time"
+            />
+            <p className="mt-2 text-[11px] text-gray-500">
+              <span className="text-emerald-400 font-semibold">Best</span> = lowest demand · <span className="text-amber-400 font-semibold">Peak</span> = high demand
+            </p>
+          </FormField>
+
+          {/* End slot picker */}
+          <FormField label="End time" htmlFor="end-time" error={errors.endTime} required>
+            <BookingSlotPicker
+              slots={endSlots}
+              selectedValue={endTime}
+              onChange={(v) => {
+                setEndTime(v);
+                setErrors((p) => ({ ...p, endTime: '' }));
+              }}
+              ariaLabel="Select an end time"
+            />
+          </FormField>
 
           {/* Duration hint */}
           {durationMinutes > 0 && (

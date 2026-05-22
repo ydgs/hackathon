@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import type { Booking } from '../types';
 import { getBookings, releaseBooking } from '../services/booking.service';
 import { StatusBadge, CsmsSyncBadge } from '../components/ui/StatusBadge';
@@ -13,11 +13,15 @@ import { TableRowSkeleton } from '../components/ui/LoadingSkeleton';
 import { useToast } from '../hooks/useToast';
 import { formatTimeWindow } from '../lib/formatters';
 import { cn } from '../lib/classNames';
+import { BookingGanttChart } from '../components/booking/BookingGanttChart';
+
+type ViewMode = 'table' | 'gantt';
 
 export function OperationsBookingsPage() {
   const { showToast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [error, setError] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [stateFilter, setStateFilter] = useState('');
@@ -76,7 +80,40 @@ export function OperationsBookingsPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-white">Operations — Today's Bookings</h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold text-white">Operations — Today's Bookings</h1>
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 bg-brand-800 rounded-lg p-1 border border-brand-700">
+          <button
+            type="button"
+            onClick={() => setViewMode('table')}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              viewMode === 'table'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white',
+            )}
+            aria-pressed={viewMode === 'table'}
+          >
+            <TableCellsIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Table</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('gantt')}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              viewMode === 'gantt'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white',
+            )}
+            aria-pressed={viewMode === 'gantt'}
+          >
+            <ChartBarIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Gantt</span>
+          </button>
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
@@ -115,7 +152,7 @@ export function OperationsBookingsPage() {
 
       {loading && <TableRowSkeleton rows={5} />}
 
-      {!loading && !error && filtered.length === 0 && (
+      {!loading && !error && filtered.length === 0 && viewMode === 'table' && (
         <EmptyState
           icon={<CalendarIcon className="w-full h-full" />}
           heading="No bookings match your filter"
@@ -125,7 +162,12 @@ export function OperationsBookingsPage() {
         />
       )}
 
-      {!loading && filtered.length > 0 && (
+      {/* ── Gantt view ─────────────────────────────────────── */}
+      {!loading && !error && viewMode === 'gantt' && (
+        <BookingGanttChart bookings={filtered} onBookingCreated={loadBookings} />
+      )}
+
+      {!loading && filtered.length > 0 && viewMode === 'table' && (
         <>
           {/* Desktop table */}
           <div className="hidden md:block bg-brand-800 rounded-card overflow-hidden">
