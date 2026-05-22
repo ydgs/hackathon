@@ -61,9 +61,42 @@
 - `GET /notifications/audit` returns all channels (Admin/Security/Workplace only)
 - Notification delivery (Email/Teams) is not actually sent in this implementation — only recorded in DB
 
-## Known Gaps (P1 Work Not Yet Implemented)
+## Background Services (P1 — Now Implemented)
 
-- No background services: no automatic no-show detection, no CSMS session sync, no reminder notifications
+### SessionSyncService
+- Polls CSMS `GET /api/sessions/active` every 30 seconds
+- Matches CSMS sessions to local bookings by `idTag` and `stationIdentity`
+- Updates placeholder sessions (state: NotStarted → Charging) when CSMS session starts
+- Marks local Charging sessions as Completed when CSMS session is no longer active
+- Creates new session records for CSMS sessions with linked bookings (no unlinked sessions)
+- Updates charger status (Available/Reserved → Charging → Available)
+- Startup delay: 10 seconds to avoid CSMS startup races
+
+### NoShowCheckerService
+- Runs every 60 seconds
+- Grace period read from `SystemConfig["GRACE_PERIOD_MINUTES"]` (default: 15)
+- Marks `Confirmed` bookings as `NoShow` if `startTime + gracePeriod < now` and no active session
+- Marks linked placeholder session as `Expired`
+- Returns charger to `Available` if it was `Reserved`
+- Creates audit log entry for each no-show: `BookingAutoNoShow`
+- Startup delay: 20 seconds
+
+### ReminderSchedulerService
+- Runs every 60 seconds
+- Sends `SessionStartingSoon` InApp notification X minutes before Confirmed booking starts
+- Sends `ChargingSessionEndingSoon` InApp notification Y minutes before Active booking end time
+- Notification timing from `SystemConfig["PRE_SESSION_REMINDER_MINUTES"]` (default: 10) and `SystemConfig["SESSION_ENDING_REMINDER_MINUTES"]` (default: 5)
+- Deduplication via `CorrelationId` (`reminder-start-{bookingId}` / `reminder-end-{bookingId}`)
+- Startup delay: 30 seconds
+
+### Background Service Test Notes
+- CSMS unavailability is handled gracefully — `GetActiveSessionsAsync()` returns empty list on error
+- All services use `IServiceScopeFactory` for scoped DB context (required for `BackgroundService`)
+- Services log errors and continue — a single failed cycle does not stop the service
+- For demo: with CSMS mock mode (`Csms:MockMode=true`), `GetActiveSessionsAsync()` returns empty — sync does nothing
+
+## Known Gaps (Still Remaining)
+
 - No rate limiting on login endpoint
 - No refresh token — users must re-login after 24 hours
-- No actual Email or Teams notification delivery
+- No actual Email or Teams notification delivery (notifications saved to DB only)
