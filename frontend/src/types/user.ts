@@ -24,8 +24,10 @@ export interface UserEligibility {
 
 export interface UserPrivacy {
   hasAcknowledgedCurrentVersion: boolean;
-  acknowledgedVersion: string;
-  acknowledgedAt: string;
+  /** null if the user has never acknowledged any version */
+  acknowledgedVersion: string | null;
+  /** null if the user has never acknowledged any version */
+  acknowledgedAt: string | null;
 }
 
 export interface CurrentUser {
