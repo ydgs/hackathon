@@ -72,6 +72,211 @@ If `docs/architecture.md` does not exist, stop and ask the team to run the `solu
 
 Flag any P0 story not marked Done by hour 8 as **at risk**. Immediately suggest a scope cut.
 
+
+## Work Item Decomposition Quality Gate
+
+Never create placeholder Tasks in Azure DevOps. The following descriptions are not allowed:
+- `Backend placeholder for US-XXX. To be decomposed.`
+- `Frontend placeholder for US-XXX. To be decomposed.`
+- `QA placeholder for US-XXX. To be decomposed.`
+- Any equivalent placeholder that does not give the assignee enough information to start work.
+
+Every Task created via the MCP must be implementation-ready. A developer or tester should be able to open the Task, understand the work, implement it, test it, and update the required documentation without asking the Scrum Master to explain the scope.
+
+Each Task description must include:
+1. **User Story reference** — work item ID and title.
+2. **Objective** — the concrete outcome expected from the Task.
+3. **Scope of work** — specific implementation or validation bullets.
+4. **Technical notes** — API, UI, database, integration, repository, or architecture guidance.
+5. **Dependencies** — related FE/BE/QA tasks, API contracts, database work, CSMS/OCPP simulator, or documents.
+6. **Acceptance criteria** — task-level criteria that can be verified.
+7. **Files or documents to update** — source folders, `/docs/features`, `/tests`, migrations, contracts, or scripts.
+8. **Testing expectations** — unit, integration, API, UI, acceptance, or demo-flow checks.
+9. **Definition of Done** — build, test, documentation, PR, and board status expectations.
+
+If a User Story does not contain enough information to create real Backend, Frontend, QA, or Documentation Tasks, do not create placeholder Tasks. Instead:
+- Mark the User Story as blocked or at risk.
+- Add a clear comment explaining what is missing.
+- Ask the Product Analyst or Solution Architect to refine the story, acceptance criteria, API contract, UI scope, or architecture guidance.
+- Only create Tasks after the missing details are available.
+
+## Azure DevOps Task Templates
+
+Use these templates when creating child Tasks under a User Story. Adapt them to the actual story; do not copy vague generic wording.
+
+### Backend Task Template
+
+**Title:** `Backend - US-XXX - <action-based task title>`
+
+**Description:**
+
+Implement backend support for `US-XXX: <User Story Title>`.
+
+**Objective:**
+- <State the backend outcome clearly.>
+
+**Scope:**
+- <API endpoint, service, entity, migration, job, integration, or validation item.>
+- <Business rule or workflow to implement.>
+- <Logging, error handling, authorization, or data persistence requirement.>
+
+**Technical Notes:**
+- Use .NET Core, Entity Framework, and PostgreSQL.
+- Follow `docs/api-conventions.md` and the architecture guidance in `docs/architecture.md`.
+- Reuse existing backend patterns and avoid one-off shortcuts unless explicitly justified for the hackathon.
+- For CSMS/OCPP work, integrate with the provided CSMS REST API; do not build a custom OCPP server or simulator.
+- Include enough implementation detail for the backend developer to start from this Task alone.
+
+**Dependencies:**
+- <Related API contract, database design, frontend task, QA task, CSMS simulator, or external dependency.>
+
+**Acceptance Criteria:**
+- <Concrete, verifiable backend criterion.>
+- <Concrete, verifiable backend criterion.>
+- <Concrete, verifiable backend criterion.>
+
+**Files/Documents to Update:**
+- `backend/` source files as required.
+- Database migration if required.
+- `docs/features/US-XXX-backend.md` after implementation.
+- `/tests/api/api-test-cases.md` or `/tests/backend/...` when relevant.
+
+**Testing Expectations:**
+- Add or update unit/integration/API tests where practical.
+- Document any manual verification steps needed for demo readiness.
+
+**Definition of Done:**
+- Code implemented and builds successfully.
+- API behavior verified against acceptance criteria.
+- Relevant tests or test notes added.
+- Feature technical documentation updated.
+- GitHub branch/commit/PR references the Azure DevOps work item ID.
+
+### Frontend Task Template
+
+**Title:** `Frontend - US-XXX - <action-based task title>`
+
+**Description:**
+
+Implement frontend support for `US-XXX: <User Story Title>`.
+
+**Objective:**
+- <State the user-facing outcome clearly.>
+
+**Scope:**
+- <Page, component, form, table, card, dashboard, or interaction to implement.>
+- <API integration, state management, validation, or error handling requirement.>
+- <Responsive/mobile behavior requirement.>
+
+**Technical Notes:**
+- Use React and follow the agreed frontend architecture.
+- Prioritize responsive behavior because the web app is expected to be used heavily on mobile.
+- Handle loading, empty, success, validation, and error states.
+- Follow API contracts and `docs/api-conventions.md`.
+- If the backend is not ready, use a clearly isolated mock only when it helps unblock UI work, and document the replacement step.
+
+**Dependencies:**
+- <Related backend API task, API contract, UI scope, design decision, or QA task.>
+
+**Acceptance Criteria:**
+- <Concrete, verifiable frontend criterion.>
+- <Concrete, verifiable frontend criterion.>
+- <Concrete, verifiable frontend criterion.>
+
+**Files/Documents to Update:**
+- `frontend/` source files as required.
+- `docs/features/US-XXX-frontend.md` after implementation.
+- `/tests/ui/ui-test-cases.md` or `/tests/frontend/...` when relevant.
+
+**Testing Expectations:**
+- Verify the feature on desktop and mobile viewport sizes.
+- Validate loading, empty, success, and error states.
+- Document any manual verification steps needed for demo readiness.
+
+**Definition of Done:**
+- UI implemented and builds successfully.
+- API integration completed or mock clearly isolated and documented.
+- Responsive behavior verified.
+- Feature technical documentation updated.
+- GitHub branch/commit/PR references the Azure DevOps work item ID.
+
+### QA Task Template
+
+**Title:** `QA - US-XXX - <action-based validation title>`
+
+**Description:**
+
+Validate `US-XXX: <User Story Title>` against acceptance criteria and demo expectations.
+
+**Objective:**
+- <State what QA must prove or protect.>
+
+**Scope:**
+- <Acceptance scenarios to validate.>
+- <API/UI/integration/demo checks to perform.>
+- <Negative, edge case, or regression checks where relevant.>
+
+**Technical Notes:**
+- Use the User Story acceptance criteria as the primary source of truth.
+- Verify integration points across frontend, backend, and CSMS simulator when relevant.
+- Keep tests practical for the 16-hour hackathon; prioritize P0 demo-critical coverage.
+
+**Dependencies:**
+- <Related FE/BE tasks, environment readiness, test data, simulator, or deployment dependency.>
+
+**Acceptance Criteria:**
+- <Concrete QA completion criterion.>
+- <Concrete QA completion criterion.>
+- <Concrete QA completion criterion.>
+
+**Files/Documents to Update:**
+- `/tests/acceptance-tests.md`
+- `/tests/api/api-test-cases.md` when API validation is needed.
+- `/tests/ui/ui-test-cases.md` when UI validation is needed.
+- `/tests/demo-test-script.md` or `/tests/e2e/main-flow.md` when demo validation is needed.
+
+**Testing Expectations:**
+- Record pass/fail status and defects found.
+- Create Bugs in Azure DevOps for failed P0/P1 acceptance criteria.
+- Link Bugs to the affected User Story.
+
+**Definition of Done:**
+- Acceptance criteria validated or defects logged.
+- Test artifacts updated in `/tests`.
+- Demo-critical risks clearly flagged.
+- Work item status updated accurately.
+
+### Documentation Task Template
+
+**Title:** `Documentation - US-XXX - <action-based documentation title>`
+
+**Description:**
+
+Create or update documentation for `US-XXX: <User Story Title>`.
+
+**Objective:**
+- <State the documentation outcome clearly.>
+
+**Scope:**
+- <Feature technical notes, API usage, setup steps, test evidence, user flow, or demo notes.>
+
+**Dependencies:**
+- <Related FE/BE/QA tasks or implementation details required before documentation can be finalized.>
+
+**Acceptance Criteria:**
+- Documentation explains what was built and how it works.
+- Documentation references relevant APIs, UI screens, database changes, or integrations.
+- Documentation is concise enough to be useful during demo preparation.
+
+**Files/Documents to Update:**
+- `docs/features/US-XXX.md`, `docs/features/US-XXX-backend.md`, or `docs/features/US-XXX-frontend.md` as appropriate.
+- `/tests/...` only when the documentation is test evidence or validation guidance.
+
+**Definition of Done:**
+- Documentation committed to the repository.
+- Linked implementation or QA tasks are referenced.
+- Any remaining gaps or assumptions are clearly stated.
+
 ## Provided CSMS / OCPP Backlog Rules
 
 When creating work items for EV charging capabilities, do not create tasks to build a custom OCPP server, OCPP WebSocket layer, OCPP protocol handlers, or custom charge-point simulator.
@@ -118,5 +323,8 @@ Return:
 - Prefer fewer, clearer stories. Do not create micro-tasks under 30 minutes.
 - Avoid creating too many tiny work items.
 - Every P0 story must map to a visible demo action.
+- Never create placeholder Backend, Frontend, QA, or Documentation Tasks.
+- Every Task must be implementation-ready before a developer or tester is expected to work on it.
+- If a story is too vague to decompose into real Tasks, mark it blocked or at risk and request clarification from the Product Analyst or Solution Architect.
 - When recommending scope cuts, always state the demo impact — "cut X, judge will not see Y, fallback is Z."
 - **If you cannot proceed due to missing information, state the blocker clearly and stop. Do not guess.**
