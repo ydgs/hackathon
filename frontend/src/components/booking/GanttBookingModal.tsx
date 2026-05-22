@@ -29,6 +29,8 @@ interface GanttBookingModalProps {
   bookings: Booking[];
   onClose: () => void;
   onBookingCreated?: () => void;
+  /** ISO date string (YYYY-MM-DD) for which this booking is being created. Defaults to today. */
+  selectedDate?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -44,8 +46,12 @@ export function GanttBookingModal({
   bookings,
   onClose,
   onBookingCreated,
+  selectedDate,
 }: GanttBookingModalProps) {
   const { currentUser } = useAuth();
+
+  // Resolve the booking date: use selectedDate if provided, else today
+  const bookingDateIso = selectedDate ?? new Date().toISOString().split('T')[0];
 
   // ── Conflict detection (computed every render from current bookings) ────────
   const BLOCKING: BookingState[] = ['Pending', 'Confirmed', 'Active'];
@@ -54,10 +60,9 @@ export function GanttBookingModal({
     const MU_UTC_OFFSET = 4;
     const utcS = ((selection.startHour - MU_UTC_OFFSET) % 24 + 24) % 24;
     const utcE = ((selection.endHour   - MU_UTC_OFFSET) % 24 + 24) % 24;
-    const d = new Date().toISOString().split('T')[0];
     return {
-      start: new Date(`${d}T${hourToHHmm(utcS)}:00Z`).getTime(),
-      end:   new Date(`${d}T${hourToHHmm(utcE)}:00Z`).getTime(),
+      start: new Date(`${bookingDateIso}T${hourToHHmm(utcS)}:00Z`).getTime(),
+      end:   new Date(`${bookingDateIso}T${hourToHHmm(utcE)}:00Z`).getTime(),
     };
   })();
 
@@ -119,9 +124,9 @@ export function GanttBookingModal({
       const MU_UTC_OFFSET = 4;
       const utcStart = ((selection.startHour - MU_UTC_OFFSET) % 24 + 24) % 24;
       const utcEnd   = ((selection.endHour   - MU_UTC_OFFSET) % 24 + 24) % 24;
-      const todayUtc = new Date().toISOString().split('T')[0];
-      const startIso = `${todayUtc}T${hourToHHmm(utcStart)}:00Z`;
-      const endIso   = `${todayUtc}T${hourToHHmm(utcEnd)}:00Z`;
+      // Use bookingDateIso (selectedDate or today) for the booking date
+      const startIso = `${bookingDateIso}T${hourToHHmm(utcStart)}:00Z`;
+      const endIso   = `${bookingDateIso}T${hourToHHmm(utcEnd)}:00Z`;
 
       const booking = await createBooking({
         chargerId:         selection.chargerId,

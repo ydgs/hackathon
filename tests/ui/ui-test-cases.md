@@ -372,8 +372,69 @@
 
 ---
 
+---
+
+## TC-026: Booking — Future Date Selection
+
+**Route:** `/bookings/new`
+**Story:** Multi-date booking support
+
+**Pre-condition:** Logged in as Alice
+
+**Steps:**
+1. Navigate to `/bookings/new`
+2. Verify "Today" chip is selected by default and past hours are grayed
+3. Click the right chevron (or "Tomorrow" chip)
+4. Verify ALL hours 06:00–19:00 are now enabled (none grayed)
+5. Select start time 09:00 — end time auto-sets to 10:00
+6. Select a charger, fill vehicle fields, click "Confirm Booking"
+
+**Expected:** Success screen shows tomorrow's date + time window. Booking state "Confirmed".
+
+---
+
+## TC-027: Operations — Date Navigation
+
+**Route:** `/operations/bookings`
+**Story:** Gantt date navigation
+
+**Pre-condition:** Logged in as Admin
+
+**Steps:**
+1. Navigate to `/operations/bookings`
+2. Verify header shows "Today" date label
+3. Click the right chevron to advance to "Tomorrow"
+4. Verify bookings table/list updates (3 mock bookings for tomorrow appear)
+5. Click "Today" reset button
+6. Verify today's bookings reload
+
+**Expected:** Date label updates correctly. Bookings reload for selected date. "Today" button resets navigation.
+
+---
+
+## TC-028: Operations — Gantt Future Date
+
+**Route:** `/operations/bookings`
+**Story:** Gantt date navigation + drag-to-book
+
+**Pre-condition:** Logged in as Admin. Currently viewing "Tomorrow" (TC-027).
+
+**Steps:**
+1. Switch to "Gantt" view mode toggle
+2. Verify Gantt renders bookings for tomorrow (3 colored bars on different charger rows)
+3. Verify NO "now" time indicator line is visible (it only shows for today)
+4. Drag on an empty slot on a charger row
+5. Booking modal opens — verify it shows the selected charger + time slot
+6. Submit the booking
+7. Booking created with tomorrow's date confirmed on success screen
+
+**Expected:** Gantt shows correct date's bookings. No "now" line on future dates. Drag-to-book creates booking for the correct (future) date.
+
+---
+
 ## Notes
 
 - All test cases use mock data (USE_MOCKS = true in all services)
 - Tests marked "skip in demo mode" require network manipulation not suitable for live demo
 - Backend integration tests will be needed once real API endpoints are available
+- TC-026 through TC-028 require the `daysFromToday()` helper in `bookings.mock.ts` to compute relative dates at runtime

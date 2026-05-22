@@ -35,6 +35,15 @@ export async function getBookings(params?: {
     if (params?.locationCode) {
       data = data.filter((b) => b.locationCode === params.locationCode);
     }
+    // Date range filtering — compare booking startTime against dateFrom/dateTo
+    if (params?.dateFrom) {
+      const fromMs = new Date(params.dateFrom).getTime();
+      data = data.filter((b) => new Date(b.startTime).getTime() >= fromMs);
+    }
+    if (params?.dateTo) {
+      const toMs = new Date(params.dateTo).getTime();
+      data = data.filter((b) => new Date(b.startTime).getTime() <= toMs);
+    }
     const total = data.length;
     return {
       data,
