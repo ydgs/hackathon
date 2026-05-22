@@ -9,10 +9,33 @@
 | **Source** | `.claude/docs/use-case-brief.md` (Accenture Mauritius NEXLevel — "Energising the Future, Reinvented") |
 | **Status** | Draft — Hackathon MVP |
 | **Date** | 2026-05-22 |
-| **Version** | v1.3 |
+| **Version** | v1.4 |
 | **Author** | Product Analyst |
 | **Audience** | Solution Architect, Backend Dev, Frontend Dev, QA, Scrum Master, Demo Coach |
-| **Revision Notes** | v1.3 — Aligned to the updated `.claude/docs/use-case-brief.md` (Section 6.1 — Provided CSMS / OCPP Simulator Constraint). Key changes: (1) The custom application MUST NOT implement a custom OCPP WebSocket server, raw OCPP protocol handlers, or raw OCPP message ingestion. All charging infrastructure data comes from the provided NexLevel CSMS REST API. (2) Section 4.3 renamed from "OCPP-Style Consumption Capture (simulated telemetry)" to "CSMS REST API Integration"; FR-OCPP-001..014 retained the same IDs for traceability but their descriptions were rewritten to describe consuming CSMS REST endpoints (`GET /api/stations`, `GET /api/stations/:identity`, `GET /api/sessions/active`, `GET /api/sessions/:id`, `GET /api/sessions`, `POST /api/auth/tags`, `DELETE /api/auth/tags/:idTag`, `GET /api/auth/tags?active=true`, `PUT/DELETE /api/stations/:id/connectors/:n/block`, `POST /api/stations/:id/remote-start`, `POST /api/stations/:id/remote-stop`). (3) Added a "CSMS Authorization Sync Status" sub-section with the booking sync states `AuthorizationPending`, `Authorized`, `AuthorizationFailed`, `Revoked`. (4) Scope summary rewritten to remove references to building a custom OCPP ingestion endpoint; replaced with CSMS REST API integration language. (5) BR-027 and BR-028 rewritten to describe CSMS booking-to-authorization flow validation; added BR-029 for AuthorizationFailed handling. (6) Validation rules updated: removed TelemetryEvent / Authorize event rows; added Booking.csmsSyncStatus, CSMS-call station/connector validation, and CSMS error → AuthorizationFailed mapping. (7) Acceptance criteria for Section 4.3 (AC-OCPP-01..09) rewritten to test CSMS integration (POST/DELETE /api/auth/tags, GET /api/sessions/active, GET /api/sessions/:id, GET /api/stations, connector block/unblock, end-to-end CSMS-driven lifecycle). (8) Section 12 Demo Journey updated to describe CSMS-driven flow (POST /api/auth/tags on booking confirmation, GET /api/sessions/active polling, GET /api/sessions/:id for energy, GET /api/stations for connector status). (9) Out-of-scope (Section 15) explicitly lists "Custom OCPP WebSocket server" and "Raw OCPP message handling". (10) Traceability table row "OCPP-Style Consumption Capture & Contactless Auth" renamed to "CSMS REST API Integration" with updated brief section references (6.1, 10.3, 18). (11) Open Questions Q25 (CSMS base URL / auth), Q26 (polling interval), and Q27 (idTag format) added. No existing FR/BR/AC IDs from v1.1 or v1.2 were renumbered. v1.2 — Aligned to the latest `.claude/docs/use-case-brief.md`. Key changes: (1) Corrected the daily charging cap from 2 hours / 120 minutes to **1 hour / 60 minutes per user per day** (BR002 alignment) across scope summary, FR-BOOK-002/003/006, BR-001, validations, AC-BOOK-03, AC-BOOK-07, assumptions, and traceability. (2) Added a Privacy Acknowledgement feature group (FR-PRIV-001..005, BR-023..024, AC-PRIV-01..04) per brief Section 10.11 / BR013. (3) Added an Eligible EV User Management feature group (FR-USER-001..006, BR-025..026, AC-USER-01..04) per brief Section 10.5 / BR006. (4) Added an explicit OCPP Authorize / contactless handshake event (FR-OCPP-011..013, BR-027..028, AC-OCPP-09..11) per brief Section 10.3 / BR004. (5) Added vehicle make/model capture on session/booking (FR-BOOK-013, FR-OCPP-014, FR-REP-017). (6) Added Audit Log as a first-class feature group (FR-AUDIT-001..005, AC-AUDIT-01..03) per brief Section 16. (7) Added Admin Maintenance Block management (FR-ADMIN-001..003, AC-ADMIN-01..02) per brief Section 10.10. (8) Added booking state `Pending` and re-confirmed `Overridden`; added Charging Session state enum `NotStarted, Authenticating, Charging, Completed, StoppedByUser, StoppedByAdmin, Faulted, Expired` per brief Section 17. (9) Added Workplace User as a first-class role and clarified Reporting/ESG Viewer per brief Section 10.9. (10) Re-aligned charger status to canonical UI label **Blocked for Maintenance** per brief Section 10.2 (kept legacy term `Maintenance` documented as equivalent). (11) Refreshed notification section against brief Sections 10.6, 13, 14, 19 — kept all v1.1 notification content; clarified Workplace user as a recipient for operational alerts and added Adaptive Card preview persistence requirement (FR-REM-019). No existing IDs from v1.1 were renumbered. |
+| **Revision Notes** | v1.4 — Aligned to the new `.claude/docs/as-is-to-be.md` companion document. Key changes: (1) Added Section 1.1 "Overview / Context" summarising the As-Is process, target To-Be process, and the quantified improvements the platform delivers (manual touchpoints 13–16 → ~0 for the standard flow; charging duration enforced 1h vs informal 3h; 8+ reporting metrics; energy/kWh capture introduced where zero data existed; OCPP-ready foundation). (2) Added MoSCoW priority mapping (Must / Should / Could / Won't) overlaid on the existing P0/P1/P2 priorities so backlog items in Azure DevOps and downstream artefacts can be sorted by either scheme. (3) Added Assumption A31 (As-Is baseline of 13–16 manual touchpoints) and A32 (target ≥ 8 populated reporting metrics, satisfied by FR-REP-001..009 at minimum). (4) Added an explicit "Won't" list cross-referenced to Section 15 Out of Scope. (5) No existing FR/BR/AC IDs were renumbered. v1.3 — Aligned to the updated `.claude/docs/use-case-brief.md` (Section 6.1 — Provided CSMS / OCPP Simulator Constraint). Key changes: (1) The custom application MUST NOT implement a custom OCPP WebSocket server, raw OCPP protocol handlers, or raw OCPP message ingestion. All charging infrastructure data comes from the provided NexLevel CSMS REST API. (2) Section 4.3 renamed from "OCPP-Style Consumption Capture (simulated telemetry)" to "CSMS REST API Integration"; FR-OCPP-001..014 retained the same IDs for traceability but their descriptions were rewritten to describe consuming CSMS REST endpoints (`GET /api/stations`, `GET /api/stations/:identity`, `GET /api/sessions/active`, `GET /api/sessions/:id`, `GET /api/sessions`, `POST /api/auth/tags`, `DELETE /api/auth/tags/:idTag`, `GET /api/auth/tags?active=true`, `PUT/DELETE /api/stations/:id/connectors/:n/block`, `POST /api/stations/:id/remote-start`, `POST /api/stations/:id/remote-stop`). (3) Added a "CSMS Authorization Sync Status" sub-section with the booking sync states `AuthorizationPending`, `Authorized`, `AuthorizationFailed`, `Revoked`. (4) Scope summary rewritten to remove references to building a custom OCPP ingestion endpoint; replaced with CSMS REST API integration language. (5) BR-027 and BR-028 rewritten to describe CSMS booking-to-authorization flow validation; added BR-029 for AuthorizationFailed handling. (6) Validation rules updated: removed TelemetryEvent / Authorize event rows; added Booking.csmsSyncStatus, CSMS-call station/connector validation, and CSMS error → AuthorizationFailed mapping. (7) Acceptance criteria for Section 4.3 (AC-OCPP-01..09) rewritten to test CSMS integration (POST/DELETE /api/auth/tags, GET /api/sessions/active, GET /api/sessions/:id, GET /api/stations, connector block/unblock, end-to-end CSMS-driven lifecycle). (8) Section 12 Demo Journey updated to describe CSMS-driven flow (POST /api/auth/tags on booking confirmation, GET /api/sessions/active polling, GET /api/sessions/:id for energy, GET /api/stations for connector status). (9) Out-of-scope (Section 15) explicitly lists "Custom OCPP WebSocket server" and "Raw OCPP message handling". (10) Traceability table row "OCPP-Style Consumption Capture & Contactless Auth" renamed to "CSMS REST API Integration" with updated brief section references (6.1, 10.3, 18). (11) Open Questions Q25 (CSMS base URL / auth), Q26 (polling interval), and Q27 (idTag format) added. No existing FR/BR/AC IDs from v1.1 or v1.2 were renumbered. v1.2 — Aligned to the latest `.claude/docs/use-case-brief.md`. Key changes: (1) Corrected the daily charging cap from 2 hours / 120 minutes to **1 hour / 60 minutes per user per day** (BR002 alignment) across scope summary, FR-BOOK-002/003/006, BR-001, validations, AC-BOOK-03, AC-BOOK-07, assumptions, and traceability. (2) Added a Privacy Acknowledgement feature group (FR-PRIV-001..005, BR-023..024, AC-PRIV-01..04) per brief Section 10.11 / BR013. (3) Added an Eligible EV User Management feature group (FR-USER-001..006, BR-025..026, AC-USER-01..04) per brief Section 10.5 / BR006. (4) Added an explicit OCPP Authorize / contactless handshake event (FR-OCPP-011..013, BR-027..028, AC-OCPP-09..11) per brief Section 10.3 / BR004. (5) Added vehicle make/model capture on session/booking (FR-BOOK-013, FR-OCPP-014, FR-REP-017). (6) Added Audit Log as a first-class feature group (FR-AUDIT-001..005, AC-AUDIT-01..03) per brief Section 16. (7) Added Admin Maintenance Block management (FR-ADMIN-001..003, AC-ADMIN-01..02) per brief Section 10.10. (8) Added booking state `Pending` and re-confirmed `Overridden`; added Charging Session state enum `NotStarted, Authenticating, Charging, Completed, StoppedByUser, StoppedByAdmin, Faulted, Expired` per brief Section 17. (9) Added Workplace User as a first-class role and clarified Reporting/ESG Viewer per brief Section 10.9. (10) Re-aligned charger status to canonical UI label **Blocked for Maintenance** per brief Section 10.2 (kept legacy term `Maintenance` documented as equivalent). (11) Refreshed notification section against brief Sections 10.6, 13, 14, 19 — kept all v1.1 notification content; clarified Workplace user as a recipient for operational alerts and added Adaptive Card preview persistence requirement (FR-REM-019). No existing IDs from v1.1 were renumbered. |
+
+---
+
+## 1.1 Overview / Context
+
+**Source documents:** `.claude/docs/use-case-brief.md` (BRD / hackathon product brief) and `.claude/docs/as-is-to-be.md` (As-Is vs To-Be analysis). All requirements in this document trace back to one or both.
+
+**Current process (As-Is) at NEX Tower and NEXTERACOM.** EV charging is coordinated by email to the Workplace team, physical cable handover at the Security desk, and a paper booking register. There are 13–16 distinct manual touchpoints per single charging event, no real-time availability, no fair-access enforcement (informal ~3-hour self-policed limit), no kWh capture, no user-to-vehicle mapping, no audit trail, no notifications, and no analytics. This does not scale against EV registrations growing 40%+ year-on-year, and it cannot evidence the 2026 binding EV energy compliance/audit obligations.
+
+**Target process (To-Be).** A mobile-first responsive web application replaces the manual workflow with self-service booking, system-enforced 1-hour-per-user-per-day fair use, real-time charger visibility across both sites, booking-to-RFID/tag authorization through the provided NexLevel CSMS, automatic kWh capture mapped to user and vehicle make/model, multi-channel reminders, ESG-ready reporting, audit logging, privacy acknowledgement, RBAC across Standard User / Security / Workplace / Admin / Reporting-ESG Viewer / Management, and a responsible AI layer for demand forecasting, pattern detection, anomalies, and natural-language summaries.
+
+**Quantified improvements the platform delivers (per `.claude/docs/as-is-to-be.md`).**
+
+- Manual touchpoints per booking event reduced from **13–16 → ~0** for the standard self-service flow.
+- Booking lead time reduced from **hours (email wait) → seconds (in-app)**.
+- Charging duration **enforced at 1 hour per user per day** (BR002), replacing the informal up-to-3-hour self-policed limit; this is the lever behind the ~3x charger-throughput claim.
+- Energy data (kWh) **captured automatically per session**, mapped to the eligible EV user and vehicle make/model, where today zero structured data exists.
+- **At least 8 operational and sustainability reporting metrics** populated automatically (sessions, kWh, utilization, peak hours, most-used chargers, no-shows, cancellations, CO₂ savings; see FR-REP-001..009).
+- **Reminder coverage** across nine templates (FR-REM-017) where today none exist.
+- **Audit log** covering overrides, releases, maintenance blocks, eligible-user changes, privacy acknowledgements, and CSMS authorization outcomes (FR-AUDIT-001).
+- **OCPP-ready foundation** through the provided CSMS REST API — no custom OCPP server is built, but the architecture is compatible with future real charger integration behind the CSMS boundary.
+
+These improvements are not separate requirements; they are the measurable outcomes against which the requirements in Sections 4–10 must be implemented and demonstrated.
 
 ---
 
@@ -232,6 +255,38 @@ Brief reference: Section 10.5, BR006.
 | **FR-USER-004** | Read-only access for operational roles | Security and Workplace can view (but not modify) the eligible EV user registry to support operational triage. | P1 | Security, Workplace |
 | **FR-USER-005** | Self-view of own eligibility | A Standard User can view their own eligible-EV-user record (eligibility status, EID, badge, vehicle make/model, privacy acknowledgement status). | P1 | Standard User |
 | **FR-USER-006** | Editable vehicle make/model | A Standard User can update their own vehicle make/model on their own eligible-EV-user record; admin role is not required for this self-service edit. The edit is audit-logged. | P1 | Standard User |
+
+---
+
+## 4.12 MoSCoW Priority Mapping
+
+This document tracks priority as P0 / P1 / P2 in each FR table (existing convention used by the hackathon agents and Azure DevOps backlog). The MoSCoW mapping below applies a 1:1 overlay so backlog items can be sorted by either scheme. Out-of-scope items in Section 15 form the **Won't** bucket.
+
+| MoSCoW | Maps to | Definition (this hackathon) | Owner |
+|---|---|---|---|
+| **Must** | P0 | Required for the demo to function end-to-end and for the MVP to be credible. Must be Done by **hour 8**. | All teams |
+| **Should** | P1 | High-value features that round out the MVP after the P0 spine is stable; targeted by **hour 13**. | All teams |
+| **Could** | P2 | Nice-to-have / responsible AI / advanced reporting; only after P1 is stable, from **hour 14**. Code freeze at hour 15. | Backend + AI |
+| **Won't** | — | Explicitly excluded — see Section 15 Out of Scope. Not built in this hackathon. | n/a |
+
+**Per-requirement MoSCoW:** each FR ID in Sections 4.1–4.11 carries a P0/P1/P2 priority; apply the mapping above. The breakdown by tier is summarised in Section 17 (Summary by MoSCoW Tier).
+
+**"Won't" items (deferred / out of scope) — restated for clarity:**
+
+- Custom OCPP WebSocket server / raw OCPP protocol handlers / raw OCPP message ingestion (owned by the provided NexLevel CSMS).
+- SMS or mobile push notification delivery.
+- Production-grade email/Teams infrastructure (payload preview/generation is the MVP fallback).
+- Notification preferences screen, opt-out, quiet hours, per-user channel selection.
+- Payments or billing per session.
+- HR system integration beyond seeded eligible-EV-user registry.
+- Native mobile applications (iOS/Android).
+- Multi-tenant / multi-organization support.
+- Fleet / full vehicle management beyond make/model capture.
+- Real-time grid pricing or dynamic tariff adjustment.
+- Vehicle-to-charger compatibility matching.
+- Smart queuing / automatic booking reallocation.
+
+See Section 15 for the authoritative out-of-scope list.
 
 ---
 
@@ -690,6 +745,8 @@ The full system MUST satisfy the following end-to-end scenario (aligned with bri
 28. The CSMS RFID/idTag authorization window (`validFrom`–`validUntil` sent to `POST /api/auth/tags`) is aligned to the booking window. The booking-to-CSMS sync is expected to complete in under **5 seconds**; otherwise the booking is flagged `AuthorizationPending` until the CSMS responds, after which it becomes `Authorized` or `AuthorizationFailed` (BR-027).
 29. Vehicle aggregation reports apply a minimum group size of **3 users** to protect privacy (FR-REP-017).
 30. The Audit Log is the primary source of truth for "who did what when" across overrides, releases, maintenance blocks, CSMS authorization outcomes (`Authorized`, `AuthorizationFailed`, `Revoked`), eligible-user changes, privacy acknowledgements, and CSMS-driven state changes.
+31. The As-Is baseline of **13–16 manual touchpoints per charging event** (per `.claude/docs/as-is-to-be.md` Section 3) is the comparator against which the To-Be improvement claims (notably "~0 manual touchpoints for the standard self-service flow") are evaluated. Demo storytelling should reference this baseline.
+32. The MVP target of **≥ 8 reporting metrics populated** (Brief Section 21 and `.claude/docs/as-is-to-be.md` Section 5) is satisfied at minimum by FR-REP-001, FR-REP-002, FR-REP-003, FR-REP-004, FR-REP-005, FR-REP-006, FR-REP-007, FR-REP-008, and FR-REP-009 (i.e. nine metrics across operational and sustainability views). Additional metrics (FR-REP-010..017) are bonus when implemented.
 
 ---
 
@@ -767,3 +824,28 @@ Restated from the use-case brief, Section 12 — Out of Scope:
 | Business Rules (cross-cutting) | BR-001..029 | 6.1, 7, 8, 9, 10, 13, 16, 17, 18, 19 |
 | Booking and Session State Reference | Section 11 | 17 |
 | Demo Journey | Section 12 | 11 |
+| Overview / Context | Section 1.1 | `as-is-to-be.md` Sections 1, 4, 5, 7 |
+| MoSCoW Priority Mapping | Section 4.12 | `use-case-brief.md` Sections 12, 13; `as-is-to-be.md` Section 5 |
+
+---
+
+## 17. Summary by MoSCoW Tier
+
+Functional requirement counts per priority tier (derived from the per-FR priority tags in Sections 4.1–4.11). This is the canonical breakdown for backlog generation and hour-budget planning.
+
+| Tier (MoSCoW) | Maps to | Count | Feature groups primarily affected |
+|---|---|---|---|
+| **Must** | P0 | 42 | Slot Booking (core), Real-Time Dashboard (core), CSMS REST API Integration (core), Reporting headline metrics, Authentication, Privacy Acknowledgement, Audit Log, Eligible EV User registry |
+| **Should** | P1 | 49 | Smart Reminders & Slot Release (all 19), most Reporting metrics, Admin Maintenance Blocks, Eligible EV User CRUD, secondary CSMS integration (maintenance block, vehicle on session), supporting auth/booking flows |
+| **Could** | P2 | 15 | Responsible AI Layer (all 11), optional CSMS remote start/stop, notification acknowledgment rate, vehicle-category aggregation |
+| **Won't** | — | — | See Section 15 Out of Scope (custom OCPP server, SMS/push, payments, native mobile, multi-tenant, etc.) |
+| **Total tracked** | — | **106** | Across 11 feature groups (Sections 4.1–4.11) |
+
+**Hour-budget alignment (per `CLAUDE.md`).**
+
+- **Must (P0):** Done by hour 8 — this is the demo-critical spine (book → CSMS authorize → simulator session → energy capture → reporting → privacy/RBAC/audit).
+- **Should (P1):** Added between hour 8 and hour 13 — reminders across all channels, full reporting, maintenance blocks, admin CRUD.
+- **Could (P2):** Added between hour 14 and the hour-15 code freeze — Responsible AI layer and optional remote start/stop.
+- **Won't:** Not built.
+
+**Business rules and acceptance criteria** are not counted in the table above; they are constraints/tests attached to the FRs and are exhaustively listed in Sections 5 (BR-001..029) and 10 (acceptance criteria per feature).

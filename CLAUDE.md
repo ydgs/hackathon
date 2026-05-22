@@ -23,21 +23,22 @@ Do not skip files in this sequence. Each file builds on the previous one. An age
 
 ## Tech Stack
 
-> **To be confirmed on the day.** The solution architect fills this in during the first 30 minutes. Once confirmed, do not deviate without updating this section and notifying the team.
+> **Confirmed baseline stack for this hackathon.** Do not deviate from this stack unless the solution architect updates this section, updates `docs/architecture.md`, and notifies the team.
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Frontend framework | TBD | |
-| Styling | TBD | |
-| Backend framework | TBD | |
-| Language | TBD | |
-| Database | TBD | |
-| ORM / Query builder | TBD | |
-| Authentication | TBD / Not required | |
-| AI integration | TBD / Not required | |
-| Hosting / demo runtime | TBD | |
+| Frontend framework | React | Use for all frontend screens and components. TypeScript is preferred for safer contracts with the API. |
+| Styling | CSS / component-level styling | Keep styling simple, responsive, and demo-safe unless `docs/architecture.md` defines a specific styling library. |
+| Backend framework | ASP.NET Core Web API | Use .NET Core for REST APIs and backend business logic. |
+| Backend language | C# | Keep services, controllers/endpoints, DTOs, and validation explicit and readable. |
+| Database | PostgreSQL | Use for persistent application data and demo seed data. |
+| ORM / Query builder | Entity Framework Core | Use EF Core migrations, DbContext, entities, configurations, and async queries. |
+| PostgreSQL provider | Npgsql Entity Framework Core provider | Use the standard EF Core provider for PostgreSQL. |
+| Authentication | TBD / Not required for MVP | Confirm in `docs/architecture.md` before implementation. Do not invent auth during feature work. |
+| AI integration | TBD / Not required for MVP | Add only after P0/P1 is stable and the architecture document defines the integration. |
+| Hosting / demo runtime | TBD | Confirm local/demo hosting approach in `docs/architecture.md`. |
 
-Full stack details and environment setup: `docs/architecture.md`
+Full stack details, package versions, connection string strategy, migration process, and environment setup must be maintained in `docs/architecture.md`.
 
 ---
 
@@ -101,22 +102,27 @@ A story is Done only when **all** of the following are true:
 
 ## Frontend Rules
 
-- Build the visible P0 user flow first.
+- Build the visible P0 user flow first using React.
+- Prefer TypeScript for React components, API DTOs, hooks, and shared frontend types.
 - Use exact field names from `docs/api-conventions.md` — do not rename fields to fit the UI.
 - Implement all four states for every API call: loading, empty, success, error.
 - Add form validation for required fields with field-level error messages.
-- Keep pages responsive (minimum 1024px — demo will likely be on a laptop or projector).
+- Keep pages responsive for laptop/projector demos and mobile usage. Do not design only for desktop.
+- Keep API calls isolated in a small service/client layer instead of scattering `fetch`/HTTP logic across components.
 - Label all temporary mock data with `// MOCK: replace with [endpoint]` — never leave it unlabelled.
 - Reference: `skills/frontend-feature-builder/`
 
 ## Backend Rules
 
-- Implement the API contract from `docs/api-conventions.md` exactly — do not invent field names.
+- Implement the API contract from `docs/api-conventions.md` exactly using ASP.NET Core Web API — do not invent field names.
+- Use Entity Framework Core with PostgreSQL for persistence. Do not bypass EF Core unless the solution architect explicitly approves it.
+- Keep DTOs/contracts separate from EF Core entities where it prevents accidental API/database coupling.
+- Use EF Core migrations for schema changes and document migration commands in the feature technical note when schema changes are made.
 - Validate all required input server-side.
 - Return errors using the shape defined in `docs/api-conventions.md` — the `errors` array format.
 - Use predictable status codes: 200, 201, 204, 400, 404, 500 (see `docs/api-conventions.md`).
 - Add seed/demo data for every P0 entity before the demo — judges should not see empty lists.
-- Do not hardcode environment values — use `.env` and add to `.env.example`.
+- Do not hardcode environment values. Use ASP.NET Core configuration (`appsettings.Development.json`, user secrets, environment variables, or pipeline variables as appropriate) and keep safe examples in `.env.example` or documented sample config.
 - Reference: `skills/backend-api-builder/`
 
 ## QA Rules
