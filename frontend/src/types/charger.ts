@@ -24,6 +24,8 @@ export interface ActiveSession {
   elapsedMinutes: number;
 }
 
+export type ConnectorType = 'Type 2' | 'CCS' | 'CHAdeMO';
+
 export interface Charger {
   id: string;
   externalStationId: string;
@@ -33,4 +35,7 @@ export interface Charger {
   location: ChargerLocation;
   lastCsmsSyncAt: string;
   activeSession: ActiveSession | null;
+  // UI/demo-only enrichment fields. Optional so the API contract stays the source of truth.
+  connectorType?: ConnectorType;
+  powerRatingKw?: number;
 }
