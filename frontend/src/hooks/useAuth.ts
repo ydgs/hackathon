@@ -95,12 +95,39 @@ export const DEMO_ACCOUNTS: Array<{
       },
     },
   },
+  {
+    label: 'New User',
+    email: 'new.user@nexlevel.local',
+    password: 'demo-password',
+    user: {
+      id: 'usr-new-005',
+      email: 'new.user@nexlevel.local',
+      displayName: 'Eve NewUser',
+      role: 'StandardUser',
+      eligibility: {
+        isEligible: true,
+        eligibilityStatus: 'Active',
+        workplaceRegistryEid: 'EID-00789',
+        badgeId: 'BDG-00789',
+        vehicleMake: 'Nissan',
+        vehicleModel: 'Leaf',
+        siteContext: 'NexTower',
+      },
+      // New user has NOT yet acknowledged privacy notice — demonstrates the privacy gate flow
+      privacy: {
+        hasAcknowledgedCurrentVersion: false,
+        acknowledgedVersion: null,
+        acknowledgedAt: null,
+      },
+    },
+  },
 ];
 
 export interface AuthContextValue {
   currentUser: CurrentUser | null;
   login: (user: CurrentUser) => void;
   logout: () => void;
+  acknowledgePrivacy: (version: string, acknowledgedAt: string) => void;
   hasRole: (...roles: UserRole[]) => boolean;
   isAdmin: boolean;
   isSecurity: boolean;
@@ -140,6 +167,26 @@ export function useAuthProvider(): AuthContextValue {
     setCurrentUser(null);
   }, []);
 
+  /**
+   * Mark the current user as having acknowledged the privacy notice.
+   * Updates localStorage and in-memory context so RequirePrivacyAck clears immediately.
+   */
+  const acknowledgePrivacy = useCallback((version: string, acknowledgedAt: string) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const updated: CurrentUser = {
+        ...prev,
+        privacy: {
+          hasAcknowledgedCurrentVersion: true,
+          acknowledgedVersion: version,
+          acknowledgedAt,
+        },
+      };
+      saveUser(updated);
+      return updated;
+    });
+  }, []);
+
   const hasRole = useCallback(
     (...roles: UserRole[]): boolean => {
       if (!currentUser) return false;
@@ -153,7 +200,7 @@ export function useAuthProvider(): AuthContextValue {
   const isWorkplace = currentUser?.role === 'Workplace';
   const isOperator = isAdmin || isSecurity || isWorkplace;
 
-  return { currentUser, login, logout, hasRole, isAdmin, isSecurity, isWorkplace, isOperator };
+  return { currentUser, login, logout, acknowledgePrivacy, hasRole, isAdmin, isSecurity, isWorkplace, isOperator };
 }
 
 export function useAuth(): AuthContextValue {
