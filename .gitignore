@@ -9,3 +9,18 @@ logs/
 
 # Node dependencies
 node_modules/
+
+# Visual Studio / Rider IDE state
+.vs/
+.idea/
+*.user
+*.suo
+
+# .NET build output
+bin/
+obj/
+*.dll
+*.pdb
+
+# .NET user secrets / local config
+*.csproj.user
