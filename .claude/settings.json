@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"let d=''; process.stdin.on\\('data',c=>d+=c\\); process.stdin.on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\); const f=j.fields; console.log\\('ID:',j.id\\); console.log\\('TYPE:',f['System.WorkItemType']\\); console.log\\('TITLE:',f['System.Title']\\); console.log\\('STATE:',f['System.State']\\); console.log\\('PRIORITY:',f['Microsoft.VSTS.Common.Priority']\\); console.log\\('AC:',\\(f['Microsoft.VSTS.Common.AcceptanceCriteria']||''\\).slice\\(0,600\\)\\); }\\)\")"
+    ]
+  }
+}
