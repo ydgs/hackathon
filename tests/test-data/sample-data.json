@@ -1,0 +1,120 @@
+{
+  "_comment": "Sample data reference for testing. These match the seed data inserted by DataSeeder.cs",
+
+  "users": [
+    {
+      "email": "alice@nexlevel.mu",
+      "password": "demo1234",
+      "role": "StandardUser",
+      "eligibilityStatus": "Active",
+      "privacyAcknowledged": true,
+      "notes": "Primary test user for happy path booking flows"
+    },
+    {
+      "email": "bob@nexlevel.mu",
+      "password": "demo1234",
+      "role": "StandardUser",
+      "eligibilityStatus": "Active",
+      "privacyAcknowledged": false,
+      "notes": "Use to test privacy-not-acknowledged rejection flow"
+    },
+    {
+      "email": "carol@nexlevel.mu",
+      "password": "demo1234",
+      "role": "Security",
+      "notes": "Security role - can release bookings and view filtered audit logs"
+    },
+    {
+      "email": "dave@nexlevel.mu",
+      "password": "demo1234",
+      "role": "Workplace",
+      "notes": "Workplace role - manages maintenance blocks, eligible users"
+    },
+    {
+      "email": "emma@nexlevel.mu",
+      "password": "demo1234",
+      "role": "Admin",
+      "notes": "Admin - full access, use as primary admin test user"
+    },
+    {
+      "email": "frank@nexlevel.mu",
+      "password": "demo1234",
+      "role": "ReportingESGViewer",
+      "notes": "Reports and AI insights access only"
+    },
+    {
+      "email": "grace@nexlevel.mu",
+      "password": "demo1234",
+      "role": "Management",
+      "notes": "Reports and AI insights access only"
+    }
+  ],
+
+  "locations": [
+    { "code": "HQ", "name": "HQ Campus - Building A" },
+    { "code": "SB", "name": "South Block - Parking Annex" }
+  ],
+
+  "chargerStatuses": [
+    "Available",
+    "Reserved",
+    "Charging",
+    "BlockedForMaintenance",
+    "Unavailable",
+    "Faulted"
+  ],
+
+  "bookingStates": [
+    "Pending",
+    "Confirmed",
+    "Active",
+    "Completed",
+    "Cancelled",
+    "Released",
+    "NoShow",
+    "Overridden"
+  ],
+
+  "sampleBookingRequest": {
+    "chargerId": "<get from GET /chargers - pick one with status=Available>",
+    "startTime": "<tomorrow ISO8601 UTC e.g. 2026-05-24T09:00:00Z>",
+    "endTime": "<tomorrow ISO8601 UTC e.g. 2026-05-24T09:45:00Z>",
+    "vehicleMake": "Tesla",
+    "vehicleModel": "Model 3"
+  },
+
+  "systemConfigKeys": [
+    "GRACE_PERIOD_MINUTES",
+    "PRE_SESSION_REMINDER_MINUTES",
+    "SESSION_ENDING_REMINDER_MINUTES",
+    "GRACE_PERIOD_WARNING_OFFSET_MINUTES",
+    "NO_SHOW_THRESHOLD_COUNT",
+    "NO_SHOW_THRESHOLD_DAYS",
+    "DAILY_CAP_MINUTES",
+    "EMISSION_FACTOR_KG_PER_KWH",
+    "CSMS_POLLING_INTERVAL_SECONDS"
+  ],
+
+  "systemConfigDefaults": {
+    "GRACE_PERIOD_MINUTES": "5",
+    "PRE_SESSION_REMINDER_MINUTES": "15",
+    "SESSION_ENDING_REMINDER_MINUTES": "10",
+    "GRACE_PERIOD_WARNING_OFFSET_MINUTES": "2",
+    "NO_SHOW_THRESHOLD_COUNT": "3",
+    "NO_SHOW_THRESHOLD_DAYS": "30",
+    "DAILY_CAP_MINUTES": "60",
+    "EMISSION_FACTOR_KG_PER_KWH": "0.233",
+    "CSMS_POLLING_INTERVAL_SECONDS": "30"
+  },
+
+  "privacyNotice": {
+    "version": "1.0",
+    "isCurrentVersion": true
+  },
+
+  "aiInsightsExpected": {
+    "confidence": "High",
+    "minimumSessionCount": 50,
+    "notes": "50+ seeded historical sessions ensure High confidence. demandForecast array will be populated."
+  }
+}
