@@ -28,6 +28,36 @@ Read these files in order before writing any test cases:
 
 Before retesting a bug: **confirm with the developer that the fix is deployed and the build is running.** Do not retest against a stale build.
 
+## Provided CSMS / Simulator Test Rules
+
+For EV charging features, test against the provided NexLevel CSMS REST API and charge-point simulator flow. Do not expect or validate a custom OCPP server in the product codebase.
+
+Required CSMS-backed test coverage when in scope:
+- Creating a booking triggers RFID/tag authorization through `POST /api/auth/tags`.
+- Cancelling or releasing a booking revokes authorization through `DELETE /api/auth/tags/:idTag`.
+- Station availability is displayed from `GET /api/stations` or `GET /api/stations/:identity`.
+- Active charging sessions are displayed from `GET /api/sessions/active`.
+- Historical sessions and consumption are displayed from `GET /api/sessions` and `GET /api/sessions/:id`.
+- Energy values are displayed correctly, including Wh to kWh conversion where applicable.
+
+Simulator-backed happy path for demo validation:
+1. Create or confirm a valid booking/RFID tag authorization.
+2. Run the provided simulator for `CP-NEX-001` or `CP-NEX-002`.
+3. Confirm the app shows the charger as active/charging.
+4. Confirm the active session appears.
+5. Confirm meter values or energy consumption appear after the simulator sends data.
+6. Confirm the final session appears in reporting after the simulator stops.
+
+Negative/failure cases to include for P0/P1 charging flows:
+- CSMS REST API unavailable.
+- RFID/tag authorization creation fails.
+- RFID/tag revocation fails.
+- Booking exists locally but CSMS authorization is missing or failed.
+- Active session exists in CSMS but has no matching local booking.
+- Charger/station is disconnected or unavailable.
+
+If the simulator or CSMS is not running, record this in `/tests/testing-assumptions.md` and do not mark CSMS-backed stories Done.
+
 ## Azure DevOps MCP — QA Workflow
 
 Read the `.env` file at the project root to get `AZURE_DEVOPS_ORG` and `AZURE_DEVOPS_PROJECT`. Use these to scope every MCP call.

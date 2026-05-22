@@ -26,6 +26,32 @@ grep -r "password\|secret\|api_key\|token" <changed files>
 
 Flag any hits from these checks as **blocking** unless there is an explicit, commented justification in the code.
 
+## CSMS / OCPP Boundary Review Rules
+
+For EV charging changes, verify that the implementation respects the provided NexLevel CSMS boundary.
+
+Blocking findings:
+- Custom OCPP server implementation added without explicit architecture approval.
+- Custom OCPP WebSocket protocol handlers added for `BootNotification`, `Authorize`, `StartTransaction`, `MeterValues`, `StopTransaction`, or `StatusNotification`.
+- Hardcoded CSMS URL in business logic instead of configuration.
+- Booking creation does not handle CSMS RFID/tag authorization success/failure.
+- Booking cancellation/release does not handle CSMS RFID/tag revocation success/failure.
+- CSMS API failures are swallowed or converted into false success states.
+- Production/demo code invents charger sessions or consumption values when the simulator-backed API should be used.
+
+Expected implementation pattern:
+- A small backend integration client/wrapper calls the CSMS REST API.
+- Frontend normally calls the custom backend, not the CSMS directly.
+- Local booking state includes enough information to detect drift from CSMS authorization/session state.
+- `.env.example` contains the CSMS base URL if charging integration is implemented.
+
+Additional grep checks for charging changes:
+```bash
+grep -r "BootNotification\|StartTransaction\|StopTransaction\|MeterValues\|StatusNotification" <changed files>
+grep -r "localhost:3000\|127\.0\.0\.1:3000" <changed files>
+```
+Hits are not automatically wrong, but they must be justified. OCPP message-handler code is a blocker unless the architect explicitly approved it.
+
 ## GitHub Pull Request Review Workflow
 
 GitHub is the source code repository. Review code from GitHub branches or pull requests, not Azure DevOps Repos, unless explicitly instructed otherwise.

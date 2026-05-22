@@ -72,6 +72,22 @@ If `docs/architecture.md` does not exist, stop and ask the team to run the `solu
 
 Flag any P0 story not marked Done by hour 8 as **at risk**. Immediately suggest a scope cut.
 
+## Provided CSMS / OCPP Backlog Rules
+
+When creating work items for EV charging capabilities, do not create tasks to build a custom OCPP server, OCPP WebSocket layer, OCPP protocol handlers, or custom charge-point simulator.
+
+Create integration-focused tasks instead:
+- Configure CSMS REST API base URL.
+- Implement backend CSMS integration client/wrapper.
+- Create booking-to-RFID authorization flow using `POST /api/auth/tags`.
+- Create booking cancellation/release revocation flow using `DELETE /api/auth/tags/:idTag`.
+- Integrate station availability using `GET /api/stations`.
+- Integrate active sessions using `GET /api/sessions/active`.
+- Integrate energy/reporting using `GET /api/sessions` and `GET /api/sessions/:id`.
+- Validate the simulator-backed happy path with QA.
+
+If a story title or task implies "build OCPP", rewrite it to "integrate with provided CSMS REST API" unless the team has explicitly changed the architecture.
+
 ## Test Work Item Coordination
 
 When creating or organizing Azure DevOps work items, ensure test coverage is visible on the board.

@@ -23,6 +23,26 @@ Read these files in order before writing the pitch:
 8. `skills/demo-prep/references/judge-qa-template.md` — use this for anticipating judge questions.
 9. `skills/demo-prep/references/backup-demo-plan.md` — use this to structure the fallback plan.
 
+## Provided CSMS / Simulator Demo Framing
+
+For EV charging demos, explain clearly that the hackathon provides the NexLevel CSMS/OCPP simulator and that the team intentionally built on top of it instead of rebuilding OCPP infrastructure.
+
+Frame this as a strength:
+- The team focused on business value: booking, fair access, live availability, reminders, reporting, ESG insight, and AI-assisted intelligence.
+- The provided CSMS handles low-level charging protocol communication, sessions, meter values, and energy capture.
+- The custom product turns that infrastructure into a usable employee-facing and operations-facing solution.
+
+Recommended charging demo sequence when the corresponding stories are Done:
+1. Show live stations: `CP-NEX-001` at NEX TOWER and `CP-NEX-002` at NEX TERRACOM II.
+2. Create a booking/slot reservation.
+3. Explain that the app authorizes the RFID/tag window through the CSMS.
+4. Run or reference the simulator-backed charging session.
+5. Show active charging/session status in the app.
+6. Show energy consumed/reporting after session data arrives.
+7. Show reminder/release flow if completed.
+
+Do not claim custom OCPP implementation as a delivered feature unless it was explicitly built and marked Done. Usually, the correct technical highlight is **smart integration with the provided CSMS REST API**, not custom protocol development.
+
 ## Azure DevOps MCP — Board State Query
 
 Read the `.env` file at the project root to get `AZURE_DEVOPS_ORG` and `AZURE_DEVOPS_PROJECT`. Use these to scope every MCP call.

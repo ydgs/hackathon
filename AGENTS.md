@@ -21,6 +21,39 @@ Every implementation branch, commit, and pull request should reference the relat
 
 ---
 
+## Provided OCPP / NexLevel CSMS Constraint
+
+The hackathon provides a **NexLevel CSMS/OCPP simulator** that already handles OCPP 1.6J charge-point communication, simulated chargers, session persistence, meter values, energy tracking, and a REST API.
+
+Agents must **not** design or implement a custom OCPP server, custom OCPP WebSocket protocol layer, BootNotification handler, MeterValues handler, StartTransaction handler, StopTransaction handler, or charge-point simulator.
+
+All charging infrastructure interactions must go through the provided CSMS REST API. Treat the CSMS as an external/provided subsystem.
+
+Default local endpoints:
+- CSMS REST API + Swagger: `http://localhost:3000`
+- OCPP WebSocket server used by simulators only: `ws://localhost:9000`
+- Optional monitoring UI: `http://localhost:5173`
+
+Known simulated charge points:
+- `CP-NEX-001` — NEX TOWER
+- `CP-NEX-002` — NEX TERRACOM II
+
+The custom product remains responsible for users, booking logic, slot conflict prevention, reminders, in-app/email/Microsoft Teams notifications, reporting, ESG dashboards, AI insights, and frontend UX.
+
+Required CSMS REST API integration points:
+- `GET /api/stations`
+- `GET /api/stations/:identity`
+- `GET /api/sessions`
+- `GET /api/sessions/active`
+- `GET /api/sessions/:id`
+- `POST /api/auth/tags`
+- `DELETE /api/auth/tags/:idTag`
+- `GET /api/auth/tags?active=true`
+- `POST /api/stations/:id/remote-start`
+- `POST /api/stations/:id/remote-stop`
+- `PUT /api/stations/:id/connectors/:n/block`
+- `DELETE /api/stations/:id/connectors/:n/block`
+
 ## Guiding Principle
 Agents produce outputs that other agents consume. Always check whether a previous agent's output exists before starting. If it does not exist, the prior agent must run first — do not proceed on missing inputs.
 
@@ -70,7 +103,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Converts the product brief into build-ready scope.
 **Reads:** Product brief (verbal/written), `CLAUDE.md`, `docs/project-context.md` (if exists)
 **Writes:** `docs/project-context.md`
-**Produces:** Product summary, target users, problem statement, MVP flow, P0/P1/P2 feature table, user stories with acceptance criteria, assumptions, out-of-scope list, demo flow, risks
+**Produces:** Product summary, target users, problem statement, MVP flow, P0/P1/P2 feature table, user stories with acceptance criteria, assumptions, out-of-scope list, demo flow, risks, provided-CSMS integration assumptions
 **Uses skill:** `skills/azure-devops-story-creator/`
 **Must complete before:** `solution-architect`, `azure-devops-scrum-master`
 
@@ -80,7 +113,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Designs the simplest stable architecture for a 16-hour build.
 **Reads:** `CLAUDE.md`, `docs/project-context.md`, `docs/api-conventions.md` (if exists)
 **Writes:** `docs/architecture.md`, `docs/api-conventions.md`
-**Produces:** Tech stack decision, folder structure, entity definitions, API contract, frontend/backend integration map, build sequence, time budget, risks, out-of-scope decisions
+**Produces:** Tech stack decision, folder structure, entity definitions, API contract, frontend/backend integration map, CSMS integration boundary, build sequence, time budget, risks, out-of-scope decisions
 **Uses skill:** `skills/api-contract-generator/`
 **Must complete before:** `backend-developer`, `frontend-developer`, `azure-devops-scrum-master`
 
@@ -90,7 +123,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Creates and maintains the Azure DevOps board, enforces time gates, recommends scope cuts.
 **Reads:** `CLAUDE.md`, `docs/project-context.md`, `docs/architecture.md`
 **Writes:** Azure DevOps board (Epic, Features, Stories, Tasks)
-**Produces:** Board structure, Epic → Feature → Story → Task hierarchy, priorities, owner suggestions, status recommendations, time gate assignments, scope cut recommendations
+**Produces:** Board structure, Epic → Feature → Story → Task hierarchy, priorities, owner suggestions, status recommendations, time gate assignments, scope cut recommendations, CSMS integration tasks without custom OCPP tasks
 **Uses skill:** `skills/azure-devops-story-creator/`
 **Template:** `docs/templates/azure-devops-user-story-template.md`
 **Must complete before:** `backend-developer`, `frontend-developer`, `qa-test-engineer`
@@ -101,7 +134,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Implements backend APIs, models, validation, business logic, and seed data.
 **Reads:** `CLAUDE.md`, `AGENTS.md`, `docs/project-context.md`, `docs/architecture.md`, `docs/api-conventions.md`, assigned Azure DevOps story
 **Writes:** Source code in `backend/`, GitHub feature/bugfix branch, implementation notes under `docs/implementation/`
-**Produces:** Implemented endpoints, API test examples, changed file summary, GitHub branch/PR reference, commit message
+**Produces:** Implemented endpoints, CSMS REST API client/wrapper where needed, API test examples, changed file summary, GitHub branch/PR reference, commit message
 **Uses skill:** `skills/backend-api-builder/`
 **Depends on:** `solution-architect` (API contract must exist before coding begins)
 
@@ -111,7 +144,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Implements frontend screens, components, forms, API integration, and UI states.
 **Reads:** `CLAUDE.md`, `AGENTS.md`, `docs/project-context.md`, `docs/architecture.md`, `docs/api-conventions.md`, assigned Azure DevOps story
 **Writes:** Source code in `frontend/`, GitHub feature/bugfix branch, implementation notes under `docs/implementation/`
-**Produces:** Implemented screens, manual test steps, changed file summary, GitHub branch/PR reference, commit message
+**Produces:** Implemented screens using backend-provided charger/session data, manual test steps, changed file summary, GitHub branch/PR reference, commit message
 **Uses skill:** `skills/frontend-feature-builder/`
 **Depends on:** `solution-architect` (API contract), `backend-developer` (endpoint deployed or contract confirmed)
 
@@ -121,7 +154,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Reviews code changes for correctness, contract compliance, security, and demo safety before merge.
 **Reads:** `CLAUDE.md`, `docs/api-conventions.md`, `docs/project-context.md`, changed files, linked Azure DevOps story
 **Writes:** Review verdict and findings in the GitHub PR when available, and Azure DevOps work-item comments when relevant
-**Produces:** Verdict (approve / approve with notes / changes required), blocking issues, non-blocking improvements, grep findings, PR/work-item traceability findings, suggested fixes
+**Produces:** Verdict (approve / approve with notes / changes required), blocking issues, non-blocking improvements, grep findings, CSMS/OCPP boundary findings, PR/work-item traceability findings, suggested fixes
 **Uses skill:** `skills/code-reviewer/`
 **When to invoke:** After every significant change, before merging to the main branch
 
@@ -131,7 +164,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Creates test cases, finds bugs, validates acceptance criteria, and runs the smoke test checklist.
 **Reads:** `CLAUDE.md`, `docs/project-context.md`, `docs/api-conventions.md`, assigned Azure DevOps story acceptance criteria
 **Writes:** Test cases and bug reports to Azure DevOps, shared QA artifacts under `tests/`
-**Produces:** P0/P1/P2 test cases, negative tests, regression checklist, demo risk list, GitHub branch/PR validation notes, bug reports
+**Produces:** P0/P1/P2 test cases, simulator-backed CSMS integration tests, negative tests, regression checklist, demo risk list, GitHub branch/PR validation notes, bug reports
 **Uses skill:** `skills/qa-test-case-generator/`
 **When to invoke:** After a developer marks a story Resolved; before the story is marked Done
 
@@ -141,7 +174,7 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 **Purpose:** Prepares the final pitch, demo script, judge Q&A preparation, and fallback plan.
 **Reads:** `CLAUDE.md`, `docs/project-context.md`, `docs/architecture.md`, Azure DevOps board (Done stories only)
 **Writes:** Demo script, judge Q&A, backup plan
-**Produces:** Opening pitch, problem statement, demo sequence, value points, technical highlights, AI feature framing, business impact, roadmap, judge Q&A, fallback plan
+**Produces:** Opening pitch, problem statement, demo sequence, value points, technical highlights including provided CSMS integration, AI feature framing, business impact, roadmap, judge Q&A, fallback plan
 **Uses skill:** `skills/demo-prep/`
 **Must not start before:** Hour 14. Must not pitch any feature not marked Done on the board.
 

@@ -31,6 +31,28 @@ If requirements exist but are vague, make explicit assumptions, state them clear
 4. Produce Azure DevOps-ready user stories.
 5. Avoid long documents that slow down delivery.
 
+## Provided OCPP / CSMS Requirement Handling
+
+When the use case involves EV charging, OCPP, charger availability, charger sessions, consumption capture, or RFID/tag authorization, treat the **NexLevel CSMS/OCPP simulator as a provided external system**.
+
+Do not write requirements or user stories that imply the team must build:
+- A custom OCPP server.
+- A custom OCPP WebSocket protocol layer.
+- BootNotification, Authorize, StartTransaction, MeterValues, StopTransaction, or StatusNotification handlers.
+- A custom charge-point simulator.
+
+Instead, document that the product consumes the provided CSMS REST API for:
+- Station and connector availability: `GET /api/stations`, `GET /api/stations/:identity`.
+- RFID/tag authorization windows for bookings: `POST /api/auth/tags`.
+- Booking cancellation / authorization revocation: `DELETE /api/auth/tags/:idTag`.
+- Active sessions: `GET /api/sessions/active`.
+- Historical sessions and reporting: `GET /api/sessions`, `GET /api/sessions/:id`.
+- Optional remote operations: `POST /api/stations/:id/remote-start`, `POST /api/stations/:id/remote-stop`.
+
+In `docs/project-context.md`, include an explicit **Charging Infrastructure Assumption** section stating that the CSMS owns OCPP protocol handling, session persistence, meter values, and energy tracking. The custom product owns booking, user experience, reminders, notifications, reporting, ESG KPIs, and AI insights.
+
+For booking-related user stories, include API contract hints that link the app's booking lifecycle to CSMS RFID/tag authorization. Example: booking created → `POST /api/auth/tags`; booking cancelled → `DELETE /api/auth/tags/:idTag`.
+
 ## Output Format
 
 Return a focused analysis — keep each section brief:
