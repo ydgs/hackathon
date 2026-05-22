@@ -28,7 +28,7 @@ Do not skip files in this sequence. Each file builds on the previous one. An age
 | Layer | Technology | Notes |
 |-------|-----------|-------|
 | Frontend framework | React | Use for all frontend screens and components. TypeScript is preferred for safer contracts with the API. |
-| Styling | CSS / component-level styling | Keep styling simple, responsive, and demo-safe unless `docs/architecture.md` defines a specific styling library. |
+| Styling | Tailwind CSS | Use Tailwind utility classes for all styling. Keep layouts simple, responsive, and demo-safe. |
 | Backend framework | ASP.NET Core Web API | Use .NET Core for REST APIs and backend business logic. |
 | Backend language | C# | Keep services, controllers/endpoints, DTOs, and validation explicit and readable. |
 | Database | PostgreSQL | Use for persistent application data and demo seed data. |
