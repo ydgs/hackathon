@@ -90,6 +90,8 @@ function ghostTimes(d: DragState): { startH: number; endH: number } {
 interface BookingGanttChartProps {
   bookings: Booking[];
   className?: string;
+  /** ISO date string (YYYY-MM-DD) for the date being displayed. Defaults to today. */
+  selectedDate?: string;
   onBookingCreated?: () => void;
 }
 
@@ -101,7 +103,9 @@ interface ChargerRow {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function BookingGanttChart({ bookings, className, onBookingCreated }: BookingGanttChartProps) {
+export function BookingGanttChart({ bookings, className, selectedDate, onBookingCreated }: BookingGanttChartProps) {
+  const todayIso = new Date().toISOString().split('T')[0];
+  const isToday = !selectedDate || selectedDate === todayIso;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [modalSelection, setModalSelection] = useState<GanttSlotSelection | null>(null);
@@ -121,7 +125,8 @@ export function BookingGanttChart({ bookings, className, onBookingCreated }: Boo
   const rows: ChargerRow[] = Array.from(chargerMap.values());
 
   const now = nowPercent();
-  const showNowLine = now >= 0 && now <= 100;
+  // Only show the "now" indicator when viewing today's schedule
+  const showNowLine = isToday && now >= 0 && now <= 100;
 
   // ── Drag handlers ─────────────────────────────────────────────────────────
 
@@ -379,6 +384,7 @@ export function BookingGanttChart({ bookings, className, onBookingCreated }: Boo
         bookings={bookings}
         onClose={() => setModalSelection(null)}
         onBookingCreated={onBookingCreated}
+        selectedDate={selectedDate}
       />
     </div>
   );

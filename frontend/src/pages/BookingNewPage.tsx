@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ChevronLeftIcon, BoltIcon, CheckCircleIcon, ExclamationTriangleIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, BoltIcon, CheckCircleIcon, ExclamationTriangleIcon, CalendarDaysIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import type { Charger, Booking } from '../types';
 import { getChargers } from '../services/charger.service';
 import { createBooking } from '../services/booking.service';
@@ -13,6 +13,33 @@ import { useAuth } from '../hooks/useAuth';
 import { cn } from '../lib/classNames';
 import { formatTimeWindow } from '../lib/formatters';
 
+// Maximum number of days ahead a booking can be made (matches system config)
+const BOOKING_WINDOW_DAYS = 14;
+
+/** Get an array of selectable dates: today + BOOKING_WINDOW_DAYS future dates. */
+function getSelectableDates(): { iso: string; label: string; short: string }[] {
+  const dates: { iso: string; label: string; short: string }[] = [];
+  const now = new Date();
+  for (let i = 0; i < BOOKING_WINDOW_DAYS; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + i);
+    const iso = d.toISOString().split('T')[0];
+    const label = d.toLocaleDateString('en-MU', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'short',
+      timeZone: 'Indian/Mauritius',
+    });
+    const short = i === 0
+      ? 'Today'
+      : i === 1
+      ? 'Tomorrow'
+      : d.toLocaleDateString('en-MU', { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Indian/Mauritius' });
+    dates.push({ iso, label, short });
+  }
+  return dates;
+}
+
 export function BookingNewPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -22,9 +49,13 @@ export function BookingNewPage() {
   const preStartTime = searchParams.get('startTime') ?? '';
   const preEndTime   = searchParams.get('endTime')   ?? '';
 
+  const selectableDates = useMemo(() => getSelectableDates(), []);
+  const todayIso = selectableDates[0]?.iso ?? new Date().toISOString().split('T')[0];
+
   const [chargers, setChargers] = useState<Charger[]>([]);
   const [chargersLoading, setChargersLoading] = useState(true);
 
+  const [selectedDateIso, setSelectedDateIso] = useState(todayIso);
   const [chargerId, setChargerId] = useState(preSelectedChargerId);
   const [startTime, setStartTime] = useState(preStartTime);
   const [endTime, setEndTime]     = useState(preEndTime);
@@ -45,10 +76,22 @@ export function BookingNewPage() {
       .finally(() => setChargersLoading(false));
   }, []);
 
-  // Hour-based slot picker — selecting a slot sets a 1-hour window.
+  // When the date changes, clear selected times to avoid stale slots
+  const handleDateChange = (dateIso: string) => {
+    setSelectedDateIso(dateIso);
+    setStartTime('');
+    setEndTime('');
+    setErrors((p) => ({ ...p, startTime: '', endTime: '' }));
+  };
+
+  const isBookingToday = selectedDateIso === todayIso;
+
+  // Hour-based slot picker — past hours are only disabled when booking for today
   const nowHour = new Date().getHours();
+  const pastCutoff = isBookingToday ? nowHour : -1; // -1 = no cutoff for future dates
+
   const startSlots = generateHourlySlots(6, 20, {
-    pastHourCutoff: nowHour,
+    pastHourCutoff: pastCutoff,
     bestHours: [11, 12],
     peakHours: [9, 10],
     reservedHours: [],
@@ -56,7 +99,7 @@ export function BookingNewPage() {
 
   const selectedStartHour = startTime ? Number(startTime.split(':')[0]) : null;
   const endSlots = generateHourlySlots(7, 21, {
-    pastHourCutoff: (selectedStartHour ?? nowHour) + 1,
+    pastHourCutoff: isBookingToday ? (selectedStartHour ?? nowHour) + 1 : (selectedStartHour != null ? selectedStartHour + 1 : -1),
   }).map((s) => ({
     ...s,
     disabled: s.disabled || (selectedStartHour != null && Number(s.value.split(':')[0]) > selectedStartHour + 1),
@@ -70,10 +113,18 @@ export function BookingNewPage() {
     return (eh * 60 + em) - (sh * 60 + sm);
   })();
 
+  // Date display label
+  const selectedDateLabel = selectableDates.find((d) => d.iso === selectedDateIso)?.label ?? selectedDateIso;
+
+  // Date navigation (prev/next)
+  const currentDateIdx = selectableDates.findIndex((d) => d.iso === selectedDateIso);
+  const canGoPrev = currentDateIdx > 0;
+  const canGoNext = currentDateIdx < selectableDates.length - 1;
+
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!chargerId) e.chargerId = 'Please select a charger.';
-    if (!startTime) e.startTime = 'Start time must be today and in the future.';
+    if (!startTime) e.startTime = isBookingToday ? 'Start time must be today and in the future.' : 'Please select a start time.';
     if (!endTime) e.endTime = 'End time must be after start time.';
     else if (durationMinutes <= 0) e.endTime = 'End time must be after start time.';
     if (!vehicleMake.trim()) e.vehicleMake = 'Vehicle make is required.';
@@ -89,10 +140,9 @@ export function BookingNewPage() {
 
     setLoading(true);
     try {
-      // Build ISO timestamps for today
-      const today = new Date().toISOString().split('T')[0];
-      const startIso = `${today}T${startTime}:00Z`;
-      const endIso = `${today}T${endTime}:00Z`;
+      // Build ISO timestamps using the selected date (not always today)
+      const startIso = `${selectedDateIso}T${startTime}:00Z`;
+      const endIso = `${selectedDateIso}T${endTime}:00Z`;
 
       const booking = await createBooking({
         chargerId,
@@ -132,7 +182,7 @@ export function BookingNewPage() {
           <div className="bg-brand-700/40 rounded-lg p-4 text-left space-y-2 text-sm">
             <p className="font-semibold text-white">{confirmedBooking.chargerDisplayName}</p>
             <p className="text-gray-300">
-              {formatTimeWindow(confirmedBooking.startTime, confirmedBooking.endTime)} · 60 min
+              {selectedDateLabel} · {formatTimeWindow(confirmedBooking.startTime, confirmedBooking.endTime)} · 60 min
             </p>
             <p className="text-gray-300">
               {confirmedBooking.vehicleMake} {confirmedBooking.vehicleModel}
@@ -224,12 +274,75 @@ export function BookingNewPage() {
             </select>
           </FormField>
 
-          {/* Date row */}
-          <div className="flex items-center gap-2 text-sm text-gray-300">
-            <CalendarDaysIcon className="h-4 w-4 text-brand-300" aria-hidden="true" />
-            <span className="font-semibold text-white">Today</span>
-            <span className="text-gray-500">·</span>
-            <span>{new Date().toLocaleDateString('en-MU', { weekday: 'long', day: '2-digit', month: 'short' })}</span>
+          {/* Date selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">
+              Date <span className="text-red-400 ml-0.5" aria-hidden="true">*</span>
+            </label>
+
+            {/* Date navigation row */}
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => canGoPrev && handleDateChange(selectableDates[currentDateIdx - 1].iso)}
+                disabled={!canGoPrev}
+                className={cn(
+                  'p-1.5 rounded-lg border transition-colors',
+                  canGoPrev
+                    ? 'border-brand-600 text-gray-300 hover:bg-brand-700 hover:text-white'
+                    : 'border-brand-800 text-gray-600 cursor-not-allowed',
+                )}
+                aria-label="Previous day"
+              >
+                <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+              </button>
+
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-700/40 border border-brand-600/40">
+                <CalendarDaysIcon className="h-4 w-4 text-brand-300 shrink-0" aria-hidden="true" />
+                <div className="min-w-0">
+                  <span className="text-xs text-brand-300 font-semibold uppercase tracking-wide">
+                    {isBookingToday ? 'Today' : currentDateIdx === 1 ? 'Tomorrow' : `In ${currentDateIdx} days`}
+                  </span>
+                  <p className="text-sm font-semibold text-white">{selectedDateLabel}</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => canGoNext && handleDateChange(selectableDates[currentDateIdx + 1].iso)}
+                disabled={!canGoNext}
+                className={cn(
+                  'p-1.5 rounded-lg border transition-colors',
+                  canGoNext
+                    ? 'border-brand-600 text-gray-300 hover:bg-brand-700 hover:text-white'
+                    : 'border-brand-800 text-gray-600 cursor-not-allowed',
+                )}
+                aria-label="Next day"
+              >
+                <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Scrollable date chips for fast navigation */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="listbox" aria-label="Select booking date">
+              {selectableDates.map((d) => (
+                <button
+                  key={d.iso}
+                  type="button"
+                  role="option"
+                  aria-selected={d.iso === selectedDateIso}
+                  onClick={() => handleDateChange(d.iso)}
+                  className={cn(
+                    'shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap transition-colors',
+                    d.iso === selectedDateIso
+                      ? 'bg-brand-500 border-brand-400 text-white'
+                      : 'border-brand-600 text-gray-400 hover:bg-brand-700 hover:text-white',
+                  )}
+                >
+                  {d.short}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Start slot picker */}
@@ -248,6 +361,7 @@ export function BookingNewPage() {
             />
             <p className="mt-2 text-[11px] text-gray-500">
               <span className="text-emerald-400 font-semibold">Best</span> = lowest demand · <span className="text-amber-400 font-semibold">Peak</span> = high demand
+              {isBookingToday && <span className="ml-1">· Grayed = past</span>}
             </p>
           </FormField>
 
