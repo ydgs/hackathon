@@ -1,102 +1,77 @@
-# Testing Assumptions
+# Testing Assumptions — NEXLevel Charge Platform
 
-## Backend Foundation
+**Updated:** 2026-05-23
 
-### Database
-- PostgreSQL must be running on `localhost:5432`
-- Database: `hackathon_ev_charging`, user: `postgres`, password: `postgres`
-- Migrations are applied automatically on startup via `db.Database.MigrateAsync()`
-- Seed data is inserted only in Development environment and is idempotent
+---
 
-### CSMS Simulator
-- The CSMS (NexLevel simulator) runs on `http://localhost:3000` in development
-- All CSMS calls fail gracefully — bookings are still created if CSMS is unavailable
-- `csmsSyncStatus` in booking response reflects actual sync state: `Synced`, `Failed`, `Pending`
-- Sessions data from CSMS simulator is flagged with `source: "CSMS-Simulator"` to distinguish from real data
+## Mock Data Assumptions
 
-### Authentication
-- JWT tokens expire after 24 hours
-- Token invalidation on logout is client-side only (no server-side token blacklist)
-- All seeded user passwords are `demo1234`
+All frontend services use `USE_MOCKS = true`. This means:
 
-### AI Insights Confidence
-- "High" confidence requires >= 50 completed charging sessions in the query period
-- "Medium" confidence requires >= 10 sessions
-- "Low" confidence (< 10 sessions) does NOT include demand forecast data
-- 50+ sessions are seeded to ensure demo shows "High" confidence by default
+1. **auth.service.ts** — Login is validated against `DEMO_ACCOUNTS` in `useAuth.ts`. Password must be `demo-password` for all accounts.
+2. **booking.service.ts** — Bookings served from `MOCK_BOOKINGS` in `src/mocks/bookings.mock.ts`. Create/cancel/release mutates in-memory array only (resets on page reload).
+3. **charger.service.ts** — Chargers served from `MOCK_CHARGERS`. Status changes are in-memory only.
+4. **notification.service.ts** — Notifications from `MOCK_NOTIFICATIONS`. Mark-read is in-memory only.
+5. **report.service.ts** — All report data is from mock constants. AI insights from `MOCK_AI_INSIGHTS`.
+6. **user.service.ts** — Eligible users from `MOCK_ELIGIBLE_USERS`. CRUD is in-memory only.
 
-### Date/Time
-- All times stored and returned as UTC (ISO 8601 with Z suffix)
-- Booking `startTime` must be at least 1 minute in the future (tolerance for test setup)
-- `startTime` to `endTime` must be > 0 minutes and <= 60 minutes for non-admin users
+**Implication:** All data resets on page reload. Multi-tab testing will not share state.
 
-### Booking Overlap Detection
-- Overlap is detected for bookings in states: Pending, Confirmed, Active
-- Cancelled, Released, Completed, NoShow, Overridden bookings do NOT block new bookings
+---
 
-### Privacy Notice
-- There must be exactly 1 PrivacyNotice with `isCurrentVersion: true` for the privacy check to work
-- Users must acknowledge the CURRENT version — acknowledging an old version is insufficient
+## Demo Account Assumptions
 
-### Data Masking
-- `GET /chargers` and `GET /chargers/{id}`: userDisplayName, vehicleMake, vehicleModel in active session are masked as "***" for StandardUser role
-- Admin, Security, Workplace roles see unmasked data
+| Account | Role | Privacy Ack | Eligibility | Purpose |
+|---|---|---|---|---|
+| Alice Standard | StandardUser | YES | Active (Tesla Model 3) | Main user journey |
+| Bob Driver | StandardUser | YES | Active (Renault Zoe, NexTower only) | Secondary user |
+| Carol Admin | Admin | YES | None | Operations, reports, admin |
+| Dan Security | Security | YES | None | Operator release, charger status |
+| Eve NewUser | StandardUser | NO | Active (Nissan Leaf) | Privacy gate demonstration |
 
-### Sustainability Report Privacy
-- Vehicle category groups with fewer than 3 distinct users are merged into "Other"
-- This is enforced server-side regardless of the requesting role
+---
 
-### Pagination Defaults
-- Default `page`: 1
-- Default `limit`: 20
-- Maximum `limit`: not enforced in current implementation (assumption: front-end respects reasonable limits)
+## API Contract Assumptions
 
-### Audit Log
-- AuditLog entries are immutable — any attempt to modify or delete throws at the application level
-- `actorUserId` is stored as a string (allows "system" as actor for automated processes)
-- Security and Workplace roles see only Booking, Charger, MaintenanceBlock, and Csms entity type entries
+- All field names match `api-contract.md` exactly (camelCase)
+- `csmsSyncStatus` values: `AuthorizationPending | Authorized | AuthorizationFailed | Revoked`
+- Booking `state` values: `Pending | Confirmed | Active | Completed | Cancelled | Released | NoShow | Overridden`
+- Charger `status` values: `Available | Reserved | Charging | BlockedForMaintenance | Unavailable | Faulted`
+- `UserPrivacy.acknowledgedVersion` and `acknowledgedAt` can be `null` for never-acknowledged users (frontend type updated to reflect this)
 
-### Notifications
-- `GET /notifications` returns only InApp channel notifications
-- `GET /notifications/audit` returns all channels (Admin/Security/Workplace only)
-- Notification delivery (Email/Teams) is not actually sent in this implementation — only recorded in DB
+---
 
-## Background Services (P1 — Now Implemented)
+## Backend Dependency Assumptions
 
-### SessionSyncService
-- Polls CSMS `GET /api/sessions/active` every 30 seconds
-- Matches CSMS sessions to local bookings by `idTag` and `stationIdentity`
-- Updates placeholder sessions (state: NotStarted → Charging) when CSMS session starts
-- Marks local Charging sessions as Completed when CSMS session is no longer active
-- Creates new session records for CSMS sessions with linked bookings (no unlinked sessions)
-- Updates charger status (Available/Reserved → Charging → Available)
-- Startup delay: 10 seconds to avoid CSMS startup races
+- Backend is NOT yet implemented beyond placeholder WeatherForecastController
+- All test cases in `ui-test-cases.md` run in mock mode
+- When backend endpoints are available, `USE_MOCKS` must be flipped to `false` in each service file
+- CSMS simulator at `http://localhost:3000` is not required for frontend mock-mode testing
 
-### NoShowCheckerService
-- Runs every 60 seconds
-- Grace period read from `SystemConfig["GRACE_PERIOD_MINUTES"]` (default: 15)
-- Marks `Confirmed` bookings as `NoShow` if `startTime + gracePeriod < now` and no active session
-- Marks linked placeholder session as `Expired`
-- Returns charger to `Available` if it was `Reserved`
-- Creates audit log entry for each no-show: `BookingAutoNoShow`
-- Startup delay: 20 seconds
+---
 
-### ReminderSchedulerService
-- Runs every 60 seconds
-- Sends `SessionStartingSoon` InApp notification X minutes before Confirmed booking starts
-- Sends `ChargingSessionEndingSoon` InApp notification Y minutes before Active booking end time
-- Notification timing from `SystemConfig["PRE_SESSION_REMINDER_MINUTES"]` (default: 10) and `SystemConfig["SESSION_ENDING_REMINDER_MINUTES"]` (default: 5)
-- Deduplication via `CorrelationId` (`reminder-start-{bookingId}` / `reminder-end-{bookingId}`)
-- Startup delay: 30 seconds
+## Privacy Flow Assumptions
 
-### Background Service Test Notes
-- CSMS unavailability is handled gracefully — `GetActiveSessionsAsync()` returns empty list on error
-- All services use `IServiceScopeFactory` for scoped DB context (required for `BackgroundService`)
-- Services log errors and continue — a single failed cycle does not stop the service
-- For demo: with CSMS mock mode (`Csms:MockMode=true`), `GetActiveSessionsAsync()` returns empty — sync does nothing
+- `PrivacyPage.handleAcknowledge()` calls `acknowledgePrivacy('v1', timestamp)` from auth context after mock delay
+- Privacy version `'v1'` is hardcoded on the client — must be fetched from backend `GET /privacy-notice` when available
+- `RequirePrivacyAck` guard at route level handles both `privacy === null` and `privacy.hasAcknowledgedCurrentVersion === false` cases
 
-## Known Gaps (Still Remaining)
+---
 
-- No rate limiting on login endpoint
-- No refresh token — users must re-login after 24 hours
-- No actual Email or Teams notification delivery (notifications saved to DB only)
+## Routing Assumptions
+
+- `/privacy` is accessible both pre- and post-auth (in `AuthLayout` without `RequireAuth` wrapper)
+- Role-based routes (`/admin/*`, `/operations/*`, `/reports`) redirect to `/dashboard` on unauthorized access (not to 403 page)
+- `RequireEligibility` redirects to `/dashboard` — no specific "not eligible" error page
+
+---
+
+## Known Gaps / Technical Debt to Track
+
+- [ ] `GET /privacy-notice` endpoint not implemented — PrivacyPage uses hardcoded mock content
+- [ ] `POST /privacy-notice/acknowledge` not implemented — mock delay only
+- [ ] `GET /chargers` 5s polling interval defined in UI but charger service polling is not implemented (manual refresh only via page reload)
+- [ ] Booking conflict detection on `BookingNewPage` is client-side only — backend must re-validate
+- [ ] `AuditPage` reads directly from `MOCK_AUDIT_LOGS` array — not using `audit.service.ts` pattern
+- [ ] Admin `ConfigPage` saves to component state only — no persistence
+- [ ] `MaintenancePage` blocks saved in component state only — no persistence
