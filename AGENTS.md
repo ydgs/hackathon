@@ -8,6 +8,19 @@ This file is read by every agent before acting. It defines:
 
 ---
 
+## Project Tooling Model
+
+This project uses a split workflow:
+
+- **Azure DevOps** is the source of truth for Epics, Features, User Stories, Tasks, Bugs, acceptance criteria, and board status.
+- **GitHub** is the source of truth for source code, branches, commits, pull requests, code reviews, and merge history.
+
+Agents must not assume Azure DevOps Repos are being used. Azure DevOps MCP is used for work-item operations only. Git/GitHub is used for repository operations.
+
+Every implementation branch, commit, and pull request should reference the related Azure DevOps work item ID when available.
+
+---
+
 ## Guiding Principle
 Agents produce outputs that other agents consume. Always check whether a previous agent's output exists before starting. If it does not exist, the prior agent must run first — do not proceed on missing inputs.
 
@@ -87,8 +100,8 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 ### `backend-developer`
 **Purpose:** Implements backend APIs, models, validation, business logic, and seed data.
 **Reads:** `CLAUDE.md`, `AGENTS.md`, `docs/project-context.md`, `docs/architecture.md`, `docs/api-conventions.md`, assigned Azure DevOps story
-**Writes:** Source code in `backend/`
-**Produces:** Implemented endpoints, API test examples, changed file summary, commit message
+**Writes:** Source code in `backend/`, GitHub feature/bugfix branch, implementation notes under `docs/implementation/`
+**Produces:** Implemented endpoints, API test examples, changed file summary, GitHub branch/PR reference, commit message
 **Uses skill:** `skills/backend-api-builder/`
 **Depends on:** `solution-architect` (API contract must exist before coding begins)
 
@@ -97,8 +110,8 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 ### `frontend-developer`
 **Purpose:** Implements frontend screens, components, forms, API integration, and UI states.
 **Reads:** `CLAUDE.md`, `AGENTS.md`, `docs/project-context.md`, `docs/architecture.md`, `docs/api-conventions.md`, assigned Azure DevOps story
-**Writes:** Source code in `frontend/`
-**Produces:** Implemented screens, manual test steps, changed file summary, commit message
+**Writes:** Source code in `frontend/`, GitHub feature/bugfix branch, implementation notes under `docs/implementation/`
+**Produces:** Implemented screens, manual test steps, changed file summary, GitHub branch/PR reference, commit message
 **Uses skill:** `skills/frontend-feature-builder/`
 **Depends on:** `solution-architect` (API contract), `backend-developer` (endpoint deployed or contract confirmed)
 
@@ -107,8 +120,8 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 ### `code-reviewer`
 **Purpose:** Reviews code changes for correctness, contract compliance, security, and demo safety before merge.
 **Reads:** `CLAUDE.md`, `docs/api-conventions.md`, `docs/project-context.md`, changed files, linked Azure DevOps story
-**Writes:** Review verdict and findings (in PR or chat)
-**Produces:** Verdict (approve / approve with notes / changes required), blocking issues, non-blocking improvements, grep findings, suggested fixes
+**Writes:** Review verdict and findings in the GitHub PR when available, and Azure DevOps work-item comments when relevant
+**Produces:** Verdict (approve / approve with notes / changes required), blocking issues, non-blocking improvements, grep findings, PR/work-item traceability findings, suggested fixes
 **Uses skill:** `skills/code-reviewer/`
 **When to invoke:** After every significant change, before merging to the main branch
 
@@ -117,8 +130,8 @@ If a phase overruns its timebox, the azure-devops-scrum-master must recommend sc
 ### `qa-test-engineer`
 **Purpose:** Creates test cases, finds bugs, validates acceptance criteria, and runs the smoke test checklist.
 **Reads:** `CLAUDE.md`, `docs/project-context.md`, `docs/api-conventions.md`, assigned Azure DevOps story acceptance criteria
-**Writes:** Test cases and bug reports to Azure DevOps
-**Produces:** P0/P1/P2 test cases, negative tests, regression checklist, demo risk list, bug reports
+**Writes:** Test cases and bug reports to Azure DevOps, shared QA artifacts under `tests/`
+**Produces:** P0/P1/P2 test cases, negative tests, regression checklist, demo risk list, GitHub branch/PR validation notes, bug reports
 **Uses skill:** `skills/qa-test-case-generator/`
 **When to invoke:** After a developer marks a story Resolved; before the story is marked Done
 
@@ -164,6 +177,7 @@ This table defines which agent is responsible for each key file. Only the owning
 | `docs/architecture.md` | `solution-architect` | All agents |
 | `docs/api-conventions.md` | `solution-architect` (initial) | `backend-developer` (extends), `frontend-developer`, `code-reviewer` |
 | Azure DevOps board | `azure-devops-scrum-master` | All agents |
+| GitHub repository / branches / pull requests | `backend-developer`, `frontend-developer`, `code-reviewer` | `qa-test-engineer`, `demo-coach` |
 | `frontend/` source | `frontend-developer` | `code-reviewer`, `qa-test-engineer` |
 | `backend/` source | `backend-developer` | `code-reviewer`, `qa-test-engineer` |
 | `tests/` | `qa-test-engineer` | `code-reviewer` |
@@ -212,11 +226,27 @@ If a non-owning agent needs to change a file it does not own, it must flag the c
 - No hardcoded credentials, API keys, or URLs that belong in environment variables.
 - No `// MOCK:` data in production code paths at demo time.
 
+## GitHub Workflow
+
+- Azure DevOps work items drive what gets built. GitHub stores the implementation.
+- Developers must create a dedicated GitHub branch for each assigned Azure DevOps task, bug, or small feature.
+- Branch naming convention:
+  - `feature/ado-<workItemId>-<short-feature-name>`
+  - `bugfix/ado-<workItemId>-<short-fix-name>`
+  - `chore/ado-<workItemId>-<short-task-name>`
+- Do not push directly to `main`.
+- Pull requests must reference the Azure DevOps work item ID in the title or description.
+- Code reviewer reviews GitHub branches/PRs against the linked Azure DevOps acceptance criteria.
+- QA validates the GitHub branch/PR against the Azure DevOps User Story before the story is marked Done.
+- If GitHub remote access is unavailable, provide the exact commands the user should run instead of claiming the push or PR was completed.
+
 ## Commit Format
 
 ```
 US-###: Short description of completed work
 BUG-###: Short description of fix
+feat(scope): short description - ADO #<id>
+fix(scope): short description - ADO #<id>
 ```
 
 Examples:
@@ -224,8 +254,11 @@ Examples:
 US-001: Add request creation form
 US-001: Implement POST /api/requests endpoint
 BUG-004: Fix validation message on empty title field
+feat(booking): implement slot reservation API - ADO #142
+fix(chargers): handle unavailable charger state - ADO #156
 ```
 
 ## Azure DevOps Interaction
 
 - Azure DevOps interaction happens via the Azure DevOps MCP server.
+- Azure DevOps MCP is for work items only. Do not use it as a code repository interface.

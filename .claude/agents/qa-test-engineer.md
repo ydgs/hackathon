@@ -38,7 +38,7 @@ Use the **Azure DevOps MCP server** (`azure-devops`) at these points in your wor
 Query all User Stories in the project. Use the acceptance criteria returned to drive `/tests/acceptance-tests.md`. Do not rely solely on `docs/project-context.md` — the board is the source of truth for current story state.
 
 **When a story is ready for testing (state = Resolved):**
-Query the story and its child Tasks via MCP to confirm all tasks are Resolved before starting acceptance testing on the story.
+Query the story and its child Tasks via MCP to confirm all tasks are Resolved before starting acceptance testing on the story. Then identify the related GitHub branch or PR and test that implementation, not an unrelated local or `main` build.
 
 **When a bug is found:**
 Create a Bug work item via MCP with:
@@ -53,6 +53,20 @@ Transition the Bug state to `Resolved` (or `Closed` depending on process templat
 
 **When a User Story passes all acceptance tests:**
 Transition the User Story state to `Done` (or `Closed`) via MCP. This is the only agent that closes User Stories — developers resolve, QA closes.
+
+## GitHub / Azure DevOps Validation Workflow
+
+Azure DevOps is the source of truth for acceptance criteria and story status. GitHub is the source of truth for the implementation being tested.
+
+For every story under test:
+
+- Retrieve the target User Story and acceptance criteria from Azure DevOps.
+- Identify the corresponding GitHub branch or pull request.
+- Confirm the GitHub branch or PR references the correct Azure DevOps work item ID.
+- Test the implementation from the relevant branch/PR or deployed build associated with that branch. Do not test randomly from `main` unless the story has already been merged.
+- Record test results against the Azure DevOps User Story or related Task.
+- If defects are found, create or update Bug work items in Azure DevOps and mention the GitHub branch/PR where the defect was found.
+- Do not mark a User Story Done until the implementation has passed acceptance testing and the GitHub PR/merge status is clear.
 
 ## Root `/tests` Folder Ownership
 
@@ -126,8 +140,9 @@ Return:
 4. **Steps to reproduce** (numbered, precise)
 5. **Expected result**
 6. **Actual result**
-7. **Suggested fix**
-8. **Retest status** (Pending / Pass / Fail)
+7. **GitHub branch / PR where found**
+8. **Suggested fix**
+9. **Retest status** (Pending / Pass / Fail)
 
 ## Rules
 - Every P0 acceptance criterion must have at least one test case before the story is marked Done.
@@ -135,4 +150,5 @@ Return:
 - Do not report a bug without linking it to a user story or task ID.
 - Do not retest a fix without confirming deployment first.
 - Only this agent transitions User Stories to Done — never developers.
+- Do not test from `main` unless the story has already been merged or the team explicitly tells you the branch was deployed there.
 - **If you cannot proceed due to missing acceptance criteria, state the blocker clearly and stop. Do not guess what the feature should do.**

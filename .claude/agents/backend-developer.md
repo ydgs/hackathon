@@ -39,14 +39,15 @@ Before writing backend code for each Azure DevOps Task/User Story, produce a con
 
 The plan must include:
 1. Azure DevOps Task/User Story ID and title.
-2. Acceptance criteria summary.
-3. Files likely to be created or modified.
-4. Endpoints to create or update.
-5. Request/response DTOs and API contract impact.
-6. Database entities, migrations, or seed/demo data required.
-7. Validation rules, business rules, and error-handling approach.
-8. Backend test approach and API test-case impact.
-9. Risks, blockers, assumptions, or contract conflicts.
+2. GitHub branch name to use or create.
+3. Acceptance criteria summary.
+4. Files likely to be created or modified.
+5. Endpoints to create or update.
+6. Request/response DTOs and API contract impact.
+7. Database entities, migrations, or seed/demo data required.
+8. Validation rules, business rules, and error-handling approach.
+9. Backend test approach and API test-case impact.
+10. Risks, blockers, assumptions, or contract conflicts.
 
 For low-risk backend tasks, proceed after writing the plan.
 
@@ -78,6 +79,34 @@ Transition the Task state to `Resolved`. Do not mark it `Done` — the QA Test E
 
 **If a bug is found during implementation:**
 Create a Bug work item via MCP with: title, repro steps, expected vs actual result, and severity. Link it as related to the parent User Story.
+
+## GitHub Source Control Workflow
+
+Azure DevOps is the task source. GitHub is the code repository. Do not use Azure DevOps Repos unless explicitly instructed.
+
+For every assigned Azure DevOps Task/User Story:
+
+1. Identify the Azure DevOps work item ID before coding.
+2. Create or switch to a dedicated GitHub branch before modifying code.
+3. Use one of these branch naming conventions:
+   - `feature/ado-<workItemId>-<short-feature-name>`
+   - `bugfix/ado-<workItemId>-<short-fix-name>`
+   - `chore/ado-<workItemId>-<short-task-name>`
+4. Do not push directly to `main`.
+5. Commit with a message that references the Azure DevOps work item ID.
+6. Push the branch to GitHub when implementation and local checks are complete, if GitHub remote access is available.
+7. Create or prepare a GitHub pull request and reference the Azure DevOps work item ID in the PR title or description.
+
+Example commands:
+
+```bash
+git checkout -b feature/ado-142-slot-booking-api
+git add .
+git commit -m "feat(booking): implement slot reservation API - ADO #142"
+git push origin feature/ado-142-slot-booking-api
+```
+
+If GitHub credentials or remote access are unavailable, do not claim the push or PR was completed. Provide the exact commands for the user to run.
 
 ## Feature Implementation Notes
 
@@ -173,8 +202,11 @@ The root `/tests/api/api-test-cases.md` should contain shared manual/API validat
 3. Provide API test examples (curl or HTTP format).
 4. State any deviations from `docs/api-conventions.md` and why.
 5. List environment variables required that are not yet in `.env.example`.
-6. Transition your Task to `Resolved` via MCP only after the implementation note is updated.
-7. Suggest a commit message.
+6. Commit changes on the dedicated GitHub branch with a message referencing the Azure DevOps work item ID.
+7. Push the branch to GitHub if remote access is available; otherwise provide the exact push command.
+8. Create or prepare a GitHub pull request and include the Azure DevOps work item ID.
+9. Transition your Task to `Resolved` via MCP only after the implementation note is updated and the branch/PR status is clear.
+10. Suggest a commit message if no commit was created.
 
 ## Rules
 - Implement P0 endpoints before optional features.
@@ -182,5 +214,6 @@ The root `/tests/api/api-test-cases.md` should contain shared manual/API validat
 - Avoid complex architecture unless there is a clear payoff.
 - **Do not silently change frontend-facing contracts.** If a deviation is necessary, flag it to the team and update `docs/api-conventions.md`.
 - Do not hardcode values that belong in environment variables.
+- Do not push directly to `main`; always use a GitHub feature, bugfix, or chore branch.
 - Keep feature implementation notes short, factual, and tied to the actual files/APIs changed.
 - **If you cannot proceed due to missing information, state the blocker clearly and stop. Do not guess.**

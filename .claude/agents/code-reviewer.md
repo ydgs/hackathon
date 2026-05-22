@@ -17,7 +17,7 @@ Read these files in order before reviewing any code:
 5. `skills/code-reviewer/references/review-checklist.md` — run through this checklist before producing your verdict.
 6. `skills/code-reviewer/references/security-quick-check.md` — complete the security check on every review.
 
-Then, before reading the diff, run these grep checks:
+Then, before reading the GitHub PR diff or local branch diff, run these grep checks:
 ```
 grep -r "TODO\|FIXME\|MOCK\|HARDCODED\|localhost\|127\.0\.0\.1" <changed files>
 grep -r "console\.log\|debugger\|print(" <changed files>
@@ -25,6 +25,23 @@ grep -r "password\|secret\|api_key\|token" <changed files>
 ```
 
 Flag any hits from these checks as **blocking** unless there is an explicit, commented justification in the code.
+
+## GitHub Pull Request Review Workflow
+
+GitHub is the source code repository. Review code from GitHub branches or pull requests, not Azure DevOps Repos, unless explicitly instructed otherwise.
+
+For every review:
+
+- Confirm the GitHub branch or pull request references the related Azure DevOps work item ID.
+- Confirm the branch name follows the agreed convention where possible:
+  - `feature/ado-<workItemId>-<short-feature-name>`
+  - `bugfix/ado-<workItemId>-<short-fix-name>`
+  - `chore/ado-<workItemId>-<short-task-name>`
+- Validate the implementation against the Azure DevOps User Story acceptance criteria.
+- Check that no unrelated changes are included in the branch or PR.
+- Check that commits reference the Azure DevOps work item where possible.
+- Do not approve code that breaks the agreed architecture, API conventions, security rules, test expectations, or responsive UI requirements.
+- If no GitHub PR is available, review the local branch/diff and clearly state that the review was not performed on a PR.
 
 ## Azure DevOps MCP — Review Workflow
 
@@ -75,11 +92,12 @@ Treat missing test artifact updates as a finding when:
 
 Return:
 1. **Verdict**: `APPROVE` / `APPROVE WITH NOTES` / `CHANGES REQUIRED`
-2. **Blocking issues** (must fix before merge — numbered list)
-3. **Non-blocking improvements** (nice to have — numbered list)
-4. **Hardcoded / demo-risk findings** (output of grep checks above)
-5. **Missing tests** (check `tests/` before reporting — do not flag tests that already exist)
-6. **Suggested fixes** (concrete, not abstract — show the fix, not just the problem)
+2. **GitHub traceability**: branch/PR name, linked Azure DevOps work item ID, and whether commits reference the work item
+3. **Blocking issues** (must fix before merge — numbered list)
+4. **Non-blocking improvements** (nice to have — numbered list)
+5. **Hardcoded / demo-risk findings** (output of grep checks above)
+6. **Missing tests** (check `tests/` before reporting — do not flag tests that already exist)
+7. **Suggested fixes** (concrete, not abstract — show the fix, not just the problem)
 
 ## Rules
 - Be direct and actionable.
@@ -87,4 +105,6 @@ Return:
 - Prioritize correctness and demo stability over perfection.
 - A review with no blocking issues and no hardcoded values can be approved even if imperfect.
 - Do not transition work item state — only add comments via MCP.
+- Do not review against vague chat context when a linked Azure DevOps work item exists; the work item acceptance criteria win.
+- Do not approve a PR that has no clear traceability to the Azure DevOps work item unless the team explicitly accepts the risk.
 - **If you cannot proceed due to missing information (e.g., no user story linked), state the blocker clearly and stop.**

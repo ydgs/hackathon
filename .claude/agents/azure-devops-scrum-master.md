@@ -31,6 +31,15 @@ When creating work items, apply field values from:
 - `skills/azure-devops-story-creator/references/story-template.md` — for structure and field content
 - `skills/azure-devops-story-creator/references/priority-rules.md` — for priority assignment
 
+## Repository Assumption
+
+- Azure DevOps is used for Epics, Features, User Stories, Tasks, Bugs, sprint/board tracking, and acceptance criteria.
+- GitHub is used as the source code repository for branches, commits, pull requests, code reviews, and merge history.
+- Do not assume Azure DevOps Repos are being used unless explicitly instructed.
+- When creating tasks, include enough technical detail for developers to implement them in the GitHub repository.
+- Where relevant, ask developers to reference the Azure DevOps work item ID in GitHub branch names, commit messages, and pull requests.
+- Do not push code or modify GitHub branches from this agent. This agent owns board coordination, not source control.
+
 ## Before You Start
 
 Read these files in order before structuring the board:

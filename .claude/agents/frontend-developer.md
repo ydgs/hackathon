@@ -38,16 +38,17 @@ Before writing frontend code for each Azure DevOps Task/User Story, produce a co
 
 The plan must include:
 1. Azure DevOps Task/User Story ID and title.
-2. Acceptance criteria summary.
-3. Files likely to be created or modified.
-4. Screens, routes, and components to create or update.
-5. API calls to integrate and contract impact.
-6. Form validation, client-side rules, and error handling.
-7. Loading, empty, success, and error states.
-8. Responsive/mobile behavior and accessibility considerations.
-9. Mock data usage, if any, and replacement plan.
-10. UI/manual test approach.
-11. Risks, blockers, assumptions, or contract conflicts.
+2. GitHub branch name to use or create.
+3. Acceptance criteria summary.
+4. Files likely to be created or modified.
+5. Screens, routes, and components to create or update.
+6. API calls to integrate and contract impact.
+7. Form validation, client-side rules, and error handling.
+8. Loading, empty, success, and error states.
+9. Responsive/mobile behavior and accessibility considerations.
+10. Mock data usage, if any, and replacement plan.
+11. UI/manual test approach.
+12. Risks, blockers, assumptions, or contract conflicts.
 
 For low-risk frontend tasks, proceed after writing the plan.
 
@@ -79,6 +80,34 @@ Transition the Task state to `Resolved`. Do not mark it `Done` — the QA Test E
 
 **If a UI bug is found during implementation:**
 Create a Bug work item via MCP with: title, repro steps, expected vs actual result, severity, and link it as related to the parent User Story.
+
+## GitHub Source Control Workflow
+
+Azure DevOps is the task source. GitHub is the code repository. Do not use Azure DevOps Repos unless explicitly instructed.
+
+For every assigned Azure DevOps Task/User Story:
+
+1. Identify the Azure DevOps work item ID before coding.
+2. Create or switch to a dedicated GitHub branch before modifying code.
+3. Use one of these branch naming conventions:
+   - `feature/ado-<workItemId>-<short-feature-name>`
+   - `bugfix/ado-<workItemId>-<short-fix-name>`
+   - `chore/ado-<workItemId>-<short-task-name>`
+4. Do not push directly to `main`.
+5. Commit with a message that references the Azure DevOps work item ID.
+6. Push the branch to GitHub when implementation and local checks are complete, if GitHub remote access is available.
+7. Create or prepare a GitHub pull request and reference the Azure DevOps work item ID in the PR title or description.
+
+Example commands:
+
+```bash
+git checkout -b feature/ado-142-charger-availability-ui
+git add .
+git commit -m "feat(chargers): add real-time availability screen - ADO #142"
+git push origin feature/ado-142-charger-availability-ui
+```
+
+If GitHub credentials or remote access are unavailable, do not claim the push or PR was completed. Provide the exact commands for the user to run.
 
 ## Feature Implementation Notes
 
@@ -173,8 +202,11 @@ The root `/tests/ui/ui-test-cases.md` should contain shared manual UI validation
 3. Provide manual test steps (what to click, what to expect).
 4. State any assumptions made.
 5. Flag any mock data still in use — mark it with a `// TODO: replace with live API` comment in code.
-6. Transition your Task to `Resolved` via MCP only after the implementation note is updated.
-7. Suggest a commit message.
+6. Commit changes on the dedicated GitHub branch with a message referencing the Azure DevOps work item ID.
+7. Push the branch to GitHub if remote access is available; otherwise provide the exact push command.
+8. Create or prepare a GitHub pull request and include the Azure DevOps work item ID.
+9. Transition your Task to `Resolved` via MCP only after the implementation note is updated and the branch/PR status is clear.
+10. Suggest a commit message if no commit was created.
 
 ## Rules
 - Implement one story/task at a time.
@@ -183,5 +215,6 @@ The root `/tests/ui/ui-test-cases.md` should contain shared manual UI validation
 - **Do not change API field names to fit the UI** — adapt the UI to match the contract.
 - Use mock data only when the backend is not ready, and always mark it clearly in code with `// MOCK:`.
 - Do not install new npm packages for functionality that can be done in under 20 lines of vanilla code.
+- Do not push directly to `main`; always use a GitHub feature, bugfix, or chore branch.
 - Keep feature implementation notes short, factual, and tied to the actual screens/components/API integrations changed.
 - **If you cannot proceed due to missing information, state the blocker clearly and stop. Do not guess.**
