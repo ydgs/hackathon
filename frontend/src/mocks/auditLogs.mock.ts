@@ -1,0 +1,109 @@
+// MOCK: replace with GET /api/v1/audit-logs when backend is ready
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actorUserId: string;
+  actorRole: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  beforeState: string | null;
+  afterState: string | null;
+  reason: string | null;
+  source: string;
+}
+
+export const MOCK_AUDIT_LOGS: AuditLogEntry[] = [
+  {
+    id: 'audit-001',
+    timestamp: '2026-05-23T08:01:36Z',
+    actorUserId: 'usr-alice-001',
+    actorRole: 'StandardUser',
+    action: 'BookingCreated',
+    entityType: 'Booking',
+    entityId: 'bk-001',
+    beforeState: null,
+    afterState: '{"state":"Confirmed","csmsSyncStatus":"Authorized"}',
+    reason: null,
+    source: 'User',
+  },
+  {
+    id: 'audit-002',
+    timestamp: '2026-05-23T07:30:00Z',
+    actorUserId: 'system',
+    actorRole: 'System',
+    action: 'CsmsAuthorizationFailed',
+    entityType: 'Booking',
+    entityId: 'bk-005',
+    beforeState: '{"csmsSyncStatus":"AuthorizationPending"}',
+    afterState: '{"csmsSyncStatus":"AuthorizationFailed"}',
+    reason: 'CSMS responded 503',
+    source: 'Csms',
+  },
+  {
+    id: 'audit-003',
+    timestamp: '2026-05-22T10:55:00Z',
+    actorUserId: 'usr-bob-002',
+    actorRole: 'StandardUser',
+    action: 'BookingCompleted',
+    entityType: 'Booking',
+    entityId: 'bk-003',
+    beforeState: '{"state":"Active"}',
+    afterState: '{"state":"Completed"}',
+    reason: null,
+    source: 'System',
+  },
+  {
+    id: 'audit-004',
+    timestamp: '2026-05-22T08:30:00Z',
+    actorUserId: 'usr-alice-001',
+    actorRole: 'StandardUser',
+    action: 'BookingCancelled',
+    entityType: 'Booking',
+    entityId: 'bk-004',
+    beforeState: '{"state":"Confirmed"}',
+    afterState: '{"state":"Cancelled"}',
+    reason: 'Plans changed',
+    source: 'User',
+  },
+  {
+    id: 'audit-005',
+    timestamp: '2026-05-23T07:25:00Z',
+    actorUserId: 'usr-admin-003',
+    actorRole: 'Admin',
+    action: 'ChargerStatusChanged',
+    entityType: 'Charger',
+    entityId: 'chr-nxt-002',
+    beforeState: '{"status":"Available"}',
+    afterState: '{"status":"Faulted"}',
+    reason: 'Connector fault detected by CSMS',
+    source: 'Admin',
+  },
+  {
+    id: 'audit-006',
+    timestamp: '2026-05-22T09:00:00Z',
+    actorUserId: 'usr-admin-003',
+    actorRole: 'Admin',
+    action: 'MaintenanceBlockCreated',
+    entityType: 'MaintenanceBlock',
+    entityId: 'mb-001',
+    beforeState: null,
+    afterState: '{"chargerId":"chr-nex-002","reason":"Firmware update"}',
+    reason: 'Firmware update scheduled',
+    source: 'Admin',
+  },
+  {
+    id: 'audit-007',
+    timestamp: '2026-05-21T14:40:00Z',
+    actorUserId: 'usr-dan-004',
+    actorRole: 'Security',
+    action: 'BookingReleased',
+    entityType: 'Booking',
+    entityId: 'bk-006',
+    beforeState: '{"state":"Active"}',
+    afterState: '{"state":"Released"}',
+    reason: 'User requested early release at security desk',
+    source: 'User',
+  },
+];
