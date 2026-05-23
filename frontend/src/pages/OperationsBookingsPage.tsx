@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarIcon, TableCellsIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, TableCellsIcon, ChartBarIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import type { Booking } from '../types';
 import { getBookings, releaseBooking } from '../services/booking.service';
 import { StatusBadge, CsmsSyncBadge } from '../components/ui/StatusBadge';
@@ -17,6 +17,32 @@ import { BookingGanttChart } from '../components/booking/BookingGanttChart';
 
 type ViewMode = 'table' | 'gantt';
 
+/** Maximum days ahead that can be viewed in operations. */
+const OPS_DATE_WINDOW_DAYS = 14;
+
+function getTodayIso(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+function offsetDate(isoDate: string, days: number): string {
+  const d = new Date(isoDate + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function formatDateLabel(isoDate: string): string {
+  const today = getTodayIso();
+  const tomorrow = offsetDate(today, 1);
+  if (isoDate === today) return 'Today';
+  if (isoDate === tomorrow) return 'Tomorrow';
+  return new Date(isoDate + 'T12:00:00Z').toLocaleDateString('en-MU', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'Indian/Mauritius',
+  });
+}
+
 export function OperationsBookingsPage() {
   const { showToast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -27,19 +53,20 @@ export function OperationsBookingsPage() {
   const [stateFilter, setStateFilter] = useState('');
   const [search, setSearch] = useState('');
 
+  // Date navigation — operations can view any day within the booking window
+  const [selectedDateIso, setSelectedDateIso] = useState(getTodayIso());
+
   const [releaseModal, setReleaseModal] = useState<{ open: boolean; booking: Booking | null }>({ open: false, booking: null });
   const [reason, setReason] = useState('');
   const [reasonError, setReasonError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const today = new Date();
-  const dateFrom = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-  const dateTo = new Date(today.setHours(23, 59, 59, 999)).toISOString();
-
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
+      const dateFrom = `${selectedDateIso}T00:00:00Z`;
+      const dateTo   = `${selectedDateIso}T23:59:59Z`;
       const res = await getBookings({ dateFrom, dateTo, limit: 100 });
       setBookings(res.data);
     } catch {
@@ -47,9 +74,22 @@ export function OperationsBookingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDateIso]);
 
-  useEffect(() => { loadBookings(); }, []);
+  useEffect(() => { loadBookings(); }, [loadBookings]);
+
+  const todayIso = getTodayIso();
+  const minDateIso = todayIso;
+  const maxDateIso = offsetDate(todayIso, OPS_DATE_WINDOW_DAYS - 1);
+  const canGoPrev = selectedDateIso > minDateIso;
+  const canGoNext = selectedDateIso < maxDateIso;
+
+  const handlePrevDay = () => {
+    if (canGoPrev) setSelectedDateIso((d) => offsetDate(d, -1));
+  };
+  const handleNextDay = () => {
+    if (canGoNext) setSelectedDateIso((d) => offsetDate(d, 1));
+  };
 
   const filtered = bookings.filter((b) => {
     if (locationFilter && b.locationCode !== locationFilter) return false;
@@ -81,7 +121,51 @@ export function OperationsBookingsPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-2xl font-bold text-white">Operations — Today's Bookings</h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold text-white">Operations — Bookings</h1>
+          {/* Date navigation */}
+          <div className="flex items-center gap-1 bg-brand-800 rounded-lg p-1 border border-brand-700">
+            <button
+              type="button"
+              onClick={handlePrevDay}
+              disabled={!canGoPrev}
+              className={cn(
+                'p-1.5 rounded-md transition-colors',
+                canGoPrev ? 'text-gray-300 hover:bg-brand-700 hover:text-white' : 'text-gray-600 cursor-not-allowed',
+              )}
+              aria-label="Previous day"
+            >
+              <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <span className="px-2 text-sm font-semibold text-white whitespace-nowrap min-w-[120px] text-center">
+              {formatDateLabel(selectedDateIso)}
+              {selectedDateIso !== todayIso && (
+                <span className="text-xs font-normal text-gray-400 block">{selectedDateIso}</span>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={handleNextDay}
+              disabled={!canGoNext}
+              className={cn(
+                'p-1.5 rounded-md transition-colors',
+                canGoNext ? 'text-gray-300 hover:bg-brand-700 hover:text-white' : 'text-gray-600 cursor-not-allowed',
+              )}
+              aria-label="Next day"
+            >
+              <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+            {selectedDateIso !== todayIso && (
+              <button
+                type="button"
+                onClick={() => setSelectedDateIso(todayIso)}
+                className="ml-1 px-2 py-1 rounded-md text-xs text-brand-300 hover:bg-brand-700 hover:text-white transition-colors border border-brand-600/60"
+              >
+                Today
+              </button>
+            )}
+          </div>
+        </div>
         {/* View mode toggle */}
         <div className="flex items-center gap-1 bg-brand-800 rounded-lg p-1 border border-brand-700">
           <button
@@ -164,7 +248,11 @@ export function OperationsBookingsPage() {
 
       {/* ── Gantt view ─────────────────────────────────────── */}
       {!loading && !error && viewMode === 'gantt' && (
-        <BookingGanttChart bookings={filtered} onBookingCreated={loadBookings} />
+        <BookingGanttChart
+          bookings={filtered}
+          selectedDate={selectedDateIso}
+          onBookingCreated={loadBookings}
+        />
       )}
 
       {!loading && filtered.length > 0 && viewMode === 'table' && (

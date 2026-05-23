@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, BoltIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import type { Booking } from '../types';
-import { getBooking, cancelBooking, releaseBooking } from '../services/booking.service';
+import { getBooking, cancelBooking, releaseBooking, operatorReleaseBooking } from '../services/booking.service';
 import { StatusBadge, CsmsSyncBadge } from '../components/ui/StatusBadge';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -15,7 +15,7 @@ import { useToast } from '../hooks/useToast';
 import { formatDatetime, formatTimeWindow, formatKwh } from '../lib/formatters';
 import { cn } from '../lib/classNames';
 
-type ActionMode = 'cancel' | 'release' | null;
+type ActionMode = 'cancel' | 'release' | 'operator-release' | null;
 
 export function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +29,7 @@ export function BookingDetailPage() {
 
   const [modalMode, setModalMode] = useState<ActionMode>(null);
   const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -50,6 +51,14 @@ export function BookingDetailPage() {
 
   const handleAction = async () => {
     if (!booking) return;
+
+    if (modalMode === 'operator-release') {
+      if (reason.trim().length < 5) {
+        setReasonError('Reason must be at least 5 characters.');
+        return;
+      }
+    }
+
     setActionLoading(true);
     setActionError('');
     try {
@@ -57,6 +66,10 @@ export function BookingDetailPage() {
         await cancelBooking(booking.id, { reason: reason || undefined });
         showToast('success', 'Booking cancelled.');
         navigate(-1);
+      } else if (modalMode === 'operator-release') {
+        await operatorReleaseBooking(booking.id, { reason: reason.trim() });
+        showToast('success', 'Booking released by operator.');
+        await load();
       } else {
         await releaseBooking(booking.id, { reason: reason || undefined });
         showToast('success', 'Booking released.');
@@ -103,8 +116,9 @@ export function BookingDetailPage() {
   if (!booking) return null;
 
   const isOwner = currentUser?.id === booking.userId;
-  const canCancel = (isOwner || isOperator) && (booking.state === 'Confirmed' || booking.state === 'Pending');
-  const canRelease = booking.state === 'Active';
+  const canCancel = isOwner && (booking.state === 'Confirmed' || booking.state === 'Pending');
+  const canRelease = isOwner && booking.state === 'Active';
+  const canOperatorRelease = isOperator && (booking.state === 'Confirmed' || booking.state === 'Active');
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
@@ -153,13 +167,13 @@ export function BookingDetailPage() {
         )}
 
         {/* Action buttons */}
-        {(canCancel || canRelease) && (
-          <div className="flex gap-3 pt-2 border-t border-brand-700">
+        {(canCancel || canRelease || canOperatorRelease) && (
+          <div className="flex gap-3 pt-2 border-t border-brand-700 flex-wrap">
             {canCancel && (
               <Button
                 variant="destructive"
                 size="md"
-                onClick={() => { setModalMode('cancel'); setReason(''); setActionError(''); }}
+                onClick={() => { setModalMode('cancel'); setReason(''); setReasonError(''); setActionError(''); }}
               >
                 Cancel Booking
               </Button>
@@ -168,9 +182,18 @@ export function BookingDetailPage() {
               <Button
                 variant="secondary"
                 size="md"
-                onClick={() => { setModalMode('release'); setReason(''); setActionError(''); }}
+                onClick={() => { setModalMode('release'); setReason(''); setReasonError(''); setActionError(''); }}
               >
-                {isOperator ? 'Release (Operator)' : 'Release'}
+                Release
+              </Button>
+            )}
+            {canOperatorRelease && (
+              <Button
+                variant="destructive"
+                size="md"
+                onClick={() => { setModalMode('operator-release'); setReason(''); setReasonError(''); setActionError(''); }}
+              >
+                Operator Release
               </Button>
             )}
           </div>
@@ -194,34 +217,49 @@ export function BookingDetailPage() {
         </details>
       </div>
 
-      {/* Cancel / Release modal */}
+      {/* Cancel / Release / Operator Release modal */}
       <Modal
         open={!!modalMode}
-        title={modalMode === 'cancel' ? 'Cancel Booking' : 'Release Booking'}
-        onClose={() => setModalMode(null)}
+        title={
+          modalMode === 'cancel'
+            ? 'Cancel Booking'
+            : modalMode === 'operator-release'
+            ? 'Operator Release'
+            : 'Release Booking'
+        }
+        onClose={() => { setModalMode(null); setReasonError(''); }}
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-300">
             {modalMode === 'cancel'
               ? `Cancel booking for ${booking.chargerDisplayName}?`
+              : modalMode === 'operator-release'
+              ? `Force-release booking for ${booking.chargerDisplayName} as operator?`
               : `Release booking for ${booking.chargerDisplayName}?`}
           </p>
           <p className="text-xs text-gray-400">
             The slot will be freed immediately. CSMS authorization will be revoked.
-            {isOperator && ' This action will be audit-logged.'}
+            {modalMode === 'operator-release' && ' This action will be audit-logged with your name and reason.'}
           </p>
 
           <FormField
-            label={isOperator ? 'Reason *' : 'Reason (optional)'}
+            label={modalMode === 'operator-release' ? 'Reason (required, min 5 chars)' : modalMode === 'cancel' ? 'Reason (optional)' : 'Reason (optional)'}
             htmlFor="detail-action-reason"
+            error={reasonError}
+            required={modalMode === 'operator-release'}
           >
             <textarea
               id="detail-action-reason"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                setReason(e.target.value);
+                if (reasonError && e.target.value.trim().length >= 5) setReasonError('');
+              }}
               rows={2}
-              className={cn(inputClasses(), 'resize-none')}
-              placeholder={isOperator ? 'Required for operator actions…' : 'Optional reason…'}
+              aria-required={modalMode === 'operator-release'}
+              aria-describedby={reasonError ? 'detail-action-reason-error' : undefined}
+              className={cn(inputClasses(!!reasonError), 'resize-none')}
+              placeholder={modalMode === 'operator-release' ? 'Enter reason (min 5 chars)…' : 'Optional reason…'}
             />
           </FormField>
 
@@ -229,15 +267,20 @@ export function BookingDetailPage() {
 
           <div className="flex gap-3 pt-1">
             <Button
-              variant={modalMode === 'cancel' ? 'destructive' : 'primary'}
+              variant={modalMode === 'cancel' || modalMode === 'operator-release' ? 'destructive' : 'primary'}
               size="md"
               loading={actionLoading}
+              disabled={modalMode === 'operator-release' && reason.trim().length < 5}
               onClick={handleAction}
               className="flex-1"
             >
-              {modalMode === 'cancel' ? 'Confirm Cancel' : 'Confirm Release'}
+              {modalMode === 'cancel'
+                ? 'Confirm Cancel'
+                : modalMode === 'operator-release'
+                ? 'Confirm Operator Release'
+                : 'Confirm Release'}
             </Button>
-            <Button variant="secondary" size="md" onClick={() => setModalMode(null)}>
+            <Button variant="secondary" size="md" onClick={() => { setModalMode(null); setReasonError(''); }}>
               Keep Booking
             </Button>
           </div>

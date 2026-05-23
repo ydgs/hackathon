@@ -66,6 +66,15 @@ All frontend services use `USE_MOCKS = true`. This means:
 
 ---
 
+## Multi-Date Booking Assumptions
+
+- `BOOKING_WINDOW_DAYS = 14` hardcoded on both `BookingNewPage` and `OperationsBookingsPage` — should match backend `SystemConfig.bookingWindowDays` when backend is ready
+- `daysFromToday(n)` in `bookings.mock.ts` uses the runtime machine clock — future-date mock bookings (bk-007 to bk-010) stay relative to current date
+- Past-hour cutoff on `BookingNewPage` only applies for "today" bookings — all hours are selectable for future dates
+- `booking.service.ts` mock now correctly filters by `dateFrom`/`dateTo` parameters (was previously unfiltered)
+
+---
+
 ## Known Gaps / Technical Debt to Track
 
 - [ ] `GET /privacy-notice` endpoint not implemented — PrivacyPage uses hardcoded mock content
@@ -75,3 +84,4 @@ All frontend services use `USE_MOCKS = true`. This means:
 - [ ] `AuditPage` reads directly from `MOCK_AUDIT_LOGS` array — not using `audit.service.ts` pattern
 - [ ] Admin `ConfigPage` saves to component state only — no persistence
 - [ ] `MaintenancePage` blocks saved in component state only — no persistence
+- [ ] `BookingNewPage` fair-use hint "60 minutes available today" is static — does not check selected-date bookings from mock/API

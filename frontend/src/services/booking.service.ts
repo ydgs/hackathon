@@ -5,6 +5,7 @@ import type {
   CancelBookingRequest,
   ReleaseBookingRequest,
   OverrideBookingRequest,
+  OperatorReleaseRequest,
   PaginatedResponse,
 } from '../types';
 import { MOCK_BOOKINGS } from '../mocks/bookings.mock';
@@ -34,6 +35,15 @@ export async function getBookings(params?: {
     }
     if (params?.locationCode) {
       data = data.filter((b) => b.locationCode === params.locationCode);
+    }
+    // Date range filtering — compare booking startTime against dateFrom/dateTo
+    if (params?.dateFrom) {
+      const fromMs = new Date(params.dateFrom).getTime();
+      data = data.filter((b) => new Date(b.startTime).getTime() >= fromMs);
+    }
+    if (params?.dateTo) {
+      const toMs = new Date(params.dateTo).getTime();
+      data = data.filter((b) => new Date(b.startTime).getTime() <= toMs);
     }
     const total = data.length;
     return {
@@ -128,4 +138,21 @@ export async function overrideBooking(id: string, req: OverrideBookingRequest): 
   }
   const { apiClient } = await import('./apiClient');
   return apiClient.put<Booking>(`/bookings/${id}/override`, req);
+}
+
+export async function operatorReleaseBooking(id: string, req: OperatorReleaseRequest): Promise<Booking> {
+  await delay(400);
+  if (USE_MOCKS) {
+    const idx = MOCK_BOOKINGS.findIndex((b) => b.id === id);
+    if (idx === -1) throw new Error('Booking not found');
+    MOCK_BOOKINGS[idx] = {
+      ...MOCK_BOOKINGS[idx],
+      state: 'Overridden',
+      csmsSyncStatus: 'Revoked',
+      reasonForOverride: req.reason,
+    };
+    return MOCK_BOOKINGS[idx];
+  }
+  const { apiClient } = await import('./apiClient');
+  return apiClient.post<Booking>(`/bookings/${id}/operator-release`, req);
 }
