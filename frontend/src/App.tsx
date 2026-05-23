@@ -17,6 +17,7 @@ import { BookingDetailPage } from './pages/BookingDetailPage';
 import { MyBookingsPage } from './pages/MyBookingsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { AiInsightsPage } from './pages/AiInsightsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -137,6 +138,17 @@ function AppRoutes() {
             <RequirePrivacyAck>
               <RequireRole roles={['Admin', 'Management', 'ReportingESGViewer', 'Workplace']}>
                 <ReportsPage />
+              </RequireRole>
+            </RequirePrivacyAck>
+          }
+        />
+
+        <Route
+          path="/reports/ai"
+          element={
+            <RequirePrivacyAck>
+              <RequireRole roles={['Admin', 'Management', 'ReportingESGViewer', 'Workplace']}>
+                <AiInsightsPage />
               </RequireRole>
             </RequirePrivacyAck>
           }
