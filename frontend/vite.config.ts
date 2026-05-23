@@ -8,14 +8,14 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // Proxy /api/v1 requests to the backend during development
-      // Backend runs on http://localhost:5000
+      // Backend runs on https://localhost:7000
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://localhost:7000',
         changeOrigin: true,
         secure: false,
       },
       '/health': {
-        target: 'http://localhost:5000',
+        target: 'https://localhost:7000',
         changeOrigin: true,
         secure: false,
       },
