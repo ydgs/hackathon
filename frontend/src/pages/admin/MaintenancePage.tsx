@@ -9,7 +9,8 @@ import { cn } from '../../lib/classNames';
 import { getChargers } from '../../services/charger.service';
 import { getBookings } from '../../services/booking.service';
 import type { Charger, Booking, ApiError } from '../../types';
-import { apiClient } from '../../services/apiClient';
+import { createMaintenanceBlock, deleteMaintenanceBlock } from '../../services/maintenance.service';
+import type { MaintenanceBlockResponse } from '../../services/maintenance.service';
 import { formatTimeWindow, formatDatetime } from '../../lib/formatters';
 
 interface MaintenanceBlock {
@@ -66,21 +67,15 @@ export function MaintenancePage() {
   const resetForm = () =>
     setForm({ chargerId: '', startTime: '', endTime: '', reason: '' });
 
-  const buildPayload = (f: FormState, force: boolean) => {
-    const payload: Record<string, unknown> = {
-      chargerId: f.chargerId,
-      startTime: new Date(f.startTime).toISOString(),
-      reason: f.reason,
-      forceReleaseExistingBookings: force,
-    };
-    if (f.endTime) payload.endTime = new Date(f.endTime).toISOString();
-    return payload;
-  };
+  const buildPayload = (f: FormState, force: boolean): Parameters<typeof createMaintenanceBlock>[0] => ({
+    chargerId: f.chargerId,
+    startTime: new Date(f.startTime).toISOString(),
+    ...(f.endTime ? { endTime: new Date(f.endTime).toISOString() } : {}),
+    reason: f.reason,
+    forceReleaseExistingBookings: force,
+  });
 
-  const applyCreatedBlock = (
-    created: { id: string; chargerId: string; startTime: string; endTime: string | null; reason: string; isActive: boolean },
-    f: FormState,
-  ) => {
+  const applyCreatedBlock = (created: MaintenanceBlockResponse, f: FormState) => {
     const charger = chargers.find((c) => c.id === f.chargerId);
     setBlocks((prev) => [
       {
@@ -107,15 +102,7 @@ export function MaintenancePage() {
 
     setCreating(true);
     try {
-      const created = await apiClient.post<{
-        id: string;
-        chargerId: string;
-        startTime: string;
-        endTime: string | null;
-        reason: string;
-        isActive: boolean;
-      }>('/maintenance-blocks', buildPayload(form, false));
-
+      const created = await createMaintenanceBlock(buildPayload(form, false));
       applyCreatedBlock(created, form);
       setCreateOpen(false);
       resetForm();
@@ -157,14 +144,7 @@ export function MaintenancePage() {
     const f = conflictModal.pendingForm;
     setCreating(true);
     try {
-      const created = await apiClient.post<{
-        id: string;
-        chargerId: string;
-        startTime: string;
-        endTime: string | null;
-        reason: string;
-        isActive: boolean;
-      }>('/maintenance-blocks', buildPayload(f, true));
+      const created = await createMaintenanceBlock(buildPayload(f, true));
 
       applyCreatedBlock(created, f);
       setConflictModal({ open: false, pendingForm: null, affectedBookings: [], loadingBookings: false });
@@ -187,7 +167,7 @@ export function MaintenancePage() {
 
   const handleRemove = async (id: string) => {
     try {
-      await apiClient.delete(`/maintenance-blocks/${id}`);
+      await deleteMaintenanceBlock(id);
       setBlocks((prev) => prev.filter((b) => b.id !== id));
       showToast('success', 'Maintenance block removed.');
     } catch {

@@ -1,68 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { Button } from '../components/ui/Button';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { useAuth } from '../hooks/useAuth';
-import { apiClient } from '../services/apiClient';
-
-// Privacy notice content matches v1 stored in the database.
-// For a production-ready implementation, this content would be fetched from GET /api/v1/privacy-notice.
-const PRIVACY_CONTENT_V1 = `
-## Privacy Notice — EV Charging Platform
-
-**Version:** v1 · **Effective:** 1 May 2026
-
-### What data we collect
-
-We collect the following personal data when you use the NEXLevel Charge platform:
-
-- Your name, email address, and Accenture employee identifier (EID).
-- Your badge identifier, where applicable.
-- Your vehicle make and model.
-- Your parking slot assignment, where applicable.
-- Booking records: charger selected, date, start time, end time.
-- Charging session data: energy consumed (kWh), session duration, charger used, connector ID, session state.
-- Notification delivery status.
-- Audit log entries for your actions within the platform.
-
-### Why we collect this data
-
-Your data is used to:
-
-- Manage fair access to EV charging infrastructure.
-- Enforce the one-hour-per-user-per-day charging limit.
-- Authorize your RFID/tag for the charging station during your booking window.
-- Send reminders about your upcoming or active charging session.
-- Generate anonymised sustainability and usage reporting for the facilities and ESG teams.
-- Maintain an audit trail for governance and compliance purposes.
-
-### Who can access your data
-
-| Role | Access level |
-|---|---|
-| Standard User | Own bookings, own session data only |
-| Security | Your booking status for operational validation |
-| Workplace | Operational booking data for coordination |
-| Admin / Facilities | Full platform data for operations and reporting |
-| System | Automated notifications and audit logging |
-
-Your name, vehicle make, and vehicle model are masked from non-admin users on the real-time dashboard.
-
-### Data retention
-
-Booking and session records are retained for 24 months for ESG and audit purposes, in line with Accenture data governance policy.
-
-### Your rights
-
-You may request access to, correction of, or deletion of your personal data by contacting the Workplace team. Note that booking and session records cannot be deleted while they are referenced by active audit obligations.
-
-### Questions
-
-Contact the Workplace Team or the Data Privacy Office at Accenture Mauritius.
-`;
-
-const CURRENT_PRIVACY_VERSION = 'v1';
+import { getPrivacyNotice, acknowledgePrivacyNotice } from '../services/privacy.service';
+import type { PrivacyNotice } from '../services/privacy.service';
 
 export function PrivacyPage() {
   const navigate = useNavigate();
@@ -70,30 +13,31 @@ export function PrivacyPage() {
   const returnTo = searchParams.get('returnTo') ?? '/dashboard';
   const { acknowledgePrivacy } = useAuth();
 
+  const [notice, setNotice] = useState<PrivacyNotice | null>(null);
+  const [loadingNotice, setLoadingNotice] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [acknowledging, setAcknowledging] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    getPrivacyNotice()
+      .then(setNotice)
+      .catch(() => setLoadError('Failed to load the privacy notice. Please refresh and try again.'))
+      .finally(() => setLoadingNotice(false));
+  }, []);
+
   const handleAcknowledge = async () => {
+    if (!notice) return;
     setAcknowledging(true);
     setError('');
     try {
-      // Call POST /api/v1/privacy-notice/acknowledge
-      const res = await apiClient.post<{ id: string; userId: string; version: string; acknowledgedAt: string }>(
-        '/privacy-notice/acknowledge',
-        { version: CURRENT_PRIVACY_VERSION },
-      );
-
-      // Update the auth context so RequirePrivacyAck clears immediately without re-login
+      const res = await acknowledgePrivacyNotice(notice.version);
       acknowledgePrivacy(res.version, res.acknowledgedAt);
-
       navigate(returnTo);
     } catch (err: unknown) {
-      const e = err as Error & { apiError?: { message: string } };
-      // If already acknowledged (409), treat as success — navigate to returnTo
-      if ((e as { apiError?: { errors?: Array<{ code?: string }> } }).apiError?.errors?.some(
-        (x: { code?: string }) => x.code === 'AlreadyAcknowledged',
-      )) {
-        acknowledgePrivacy(CURRENT_PRIVACY_VERSION, new Date().toISOString());
+      const e = err as Error & { apiError?: { message: string; errors?: Array<{ code?: string }> } };
+      if (e.apiError?.errors?.some((x) => x.code === 'AlreadyAcknowledged')) {
+        acknowledgePrivacy(notice.version, new Date().toISOString());
         navigate(returnTo);
         return;
       }
@@ -118,14 +62,25 @@ export function PrivacyPage() {
         {/* Header */}
         <div className="px-6 py-5 border-b border-brand-700">
           <h1 className="text-xl font-bold text-white">Privacy Notice</h1>
-          <p className="text-xs text-gray-400 mt-1">
-            Version v1 · Effective 1 May 2026
-          </p>
+          {notice && (
+            <p className="text-xs text-gray-400 mt-1">
+              Version {notice.version} · Effective {new Date(notice.effectiveDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          )}
         </div>
 
         {/* Content */}
         <div className="px-6 py-5 prose prose-invert prose-sm max-w-none">
-          <PrivacyContent markdown={PRIVACY_CONTENT_V1} />
+          {loadingNotice ? (
+            <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
+              <div className="h-4 w-4 rounded-full border-2 border-brand-400 border-t-transparent animate-spin" />
+              Loading privacy notice…
+            </div>
+          ) : loadError ? (
+            <ErrorBanner message={loadError} />
+          ) : notice ? (
+            <PrivacyContent markdown={notice.content} />
+          ) : null}
         </div>
 
         {/* CTA */}
@@ -137,6 +92,7 @@ export function PrivacyPage() {
             variant="primary"
             size="lg"
             loading={acknowledging}
+            disabled={loadingNotice || !!loadError || !notice}
             className="w-full"
             onClick={handleAcknowledge}
           >
