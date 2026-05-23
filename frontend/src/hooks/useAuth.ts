@@ -1,126 +1,25 @@
-// MOCK: replace with real JWT + /auth/me call when backend is ready
 import { createContext, useContext, useState, useCallback } from 'react';
 import type { CurrentUser, UserRole } from '../types';
 
 const STORAGE_KEY = 'nexlevel_user';
 
-// Demo account profiles for quick-select chips
+/**
+ * Demo account quick-select chips for the login page.
+ * Emails and passwords match the backend seed data (DataSeeder.cs).
+ * All passwords are: demo1234
+ */
 export const DEMO_ACCOUNTS: Array<{
   label: string;
   email: string;
   password: string;
-  user: CurrentUser;
 }> = [
-  {
-    label: 'Alice',
-    email: 'alice.standard@nexlevel.local',
-    password: 'demo-password',
-    user: {
-      id: 'usr-alice-001',
-      email: 'alice.standard@nexlevel.local',
-      displayName: 'Alice Standard',
-      role: 'StandardUser',
-      eligibility: {
-        isEligible: true,
-        eligibilityStatus: 'Active',
-        workplaceRegistryEid: 'EID-00123',
-        badgeId: 'BDG-00123',
-        vehicleMake: 'Tesla',
-        vehicleModel: 'Model 3',
-        siteContext: 'Both',
-      },
-      privacy: {
-        hasAcknowledgedCurrentVersion: true,
-        acknowledgedVersion: 'v1',
-        acknowledgedAt: '2026-05-22T07:55:00Z',
-      },
-    },
-  },
-  {
-    label: 'Bob',
-    email: 'bob.driver@nexlevel.local',
-    password: 'demo-password',
-    user: {
-      id: 'usr-bob-002',
-      email: 'bob.driver@nexlevel.local',
-      displayName: 'Bob Driver',
-      role: 'StandardUser',
-      eligibility: {
-        isEligible: true,
-        eligibilityStatus: 'Active',
-        workplaceRegistryEid: 'EID-00456',
-        badgeId: 'BDG-00456',
-        vehicleMake: 'Renault',
-        vehicleModel: 'Zoe',
-        siteContext: 'NexTower',
-      },
-      privacy: {
-        hasAcknowledgedCurrentVersion: true,
-        acknowledgedVersion: 'v1',
-        acknowledgedAt: '2026-05-22T07:58:00Z',
-      },
-    },
-  },
-  {
-    label: 'Admin',
-    email: 'admin@nexlevel.local',
-    password: 'demo-password',
-    user: {
-      id: 'usr-admin-003',
-      email: 'admin@nexlevel.local',
-      displayName: 'Carol Admin',
-      role: 'Admin',
-      eligibility: null,
-      privacy: {
-        hasAcknowledgedCurrentVersion: true,
-        acknowledgedVersion: 'v1',
-        acknowledgedAt: '2026-05-22T07:00:00Z',
-      },
-    },
-  },
-  {
-    label: 'Security',
-    email: 'security@nexlevel.local',
-    password: 'demo-password',
-    user: {
-      id: 'usr-security-004',
-      email: 'security@nexlevel.local',
-      displayName: 'Dan Security',
-      role: 'Security',
-      eligibility: null,
-      privacy: {
-        hasAcknowledgedCurrentVersion: true,
-        acknowledgedVersion: 'v1',
-        acknowledgedAt: '2026-05-22T07:00:00Z',
-      },
-    },
-  },
-  {
-    label: 'New User',
-    email: 'new.user@nexlevel.local',
-    password: 'demo-password',
-    user: {
-      id: 'usr-new-005',
-      email: 'new.user@nexlevel.local',
-      displayName: 'Eve NewUser',
-      role: 'StandardUser',
-      eligibility: {
-        isEligible: true,
-        eligibilityStatus: 'Active',
-        workplaceRegistryEid: 'EID-00789',
-        badgeId: 'BDG-00789',
-        vehicleMake: 'Nissan',
-        vehicleModel: 'Leaf',
-        siteContext: 'NexTower',
-      },
-      // New user has NOT yet acknowledged privacy notice — demonstrates the privacy gate flow
-      privacy: {
-        hasAcknowledgedCurrentVersion: false,
-        acknowledgedVersion: null,
-        acknowledgedAt: null,
-      },
-    },
-  },
+  { label: 'Alice (User)', email: 'alice@nexlevel.mu', password: 'demo1234' },
+  { label: 'Bob (User)', email: 'bob@nexlevel.mu', password: 'demo1234' },
+  { label: 'Emma (Admin)', email: 'emma@nexlevel.mu', password: 'demo1234' },
+  { label: 'Carol (Security)', email: 'carol@nexlevel.mu', password: 'demo1234' },
+  { label: 'Dave (Workplace)', email: 'dave@nexlevel.mu', password: 'demo1234' },
+  { label: 'Frank (ESG)', email: 'frank@nexlevel.mu', password: 'demo1234' },
+  { label: 'Grace (Management)', email: 'grace@nexlevel.mu', password: 'demo1234' },
 ];
 
 export interface AuthContextValue {
@@ -165,6 +64,7 @@ export function useAuthProvider(): AuthContextValue {
   const logout = useCallback(() => {
     saveUser(null);
     setCurrentUser(null);
+    localStorage.removeItem('nexlevel_token');
   }, []);
 
   /**
