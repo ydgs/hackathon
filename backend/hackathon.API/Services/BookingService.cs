@@ -101,13 +101,27 @@ public class BookingService : IBookingService
             }, 409);
         }
 
-        // Validation 7: no existing active booking
-        var hasActiveBooking = await _db.Bookings.AnyAsync(b =>
+        // Validation 7: user already has a booking that overlaps this time window
+        var existingActiveBooking = await _db.Bookings.FirstOrDefaultAsync(b =>
             b.UserId == effectiveUserId
-            && (b.State == BookingState.Pending || b.State == BookingState.Confirmed || b.State == BookingState.Active));
+            && (b.State == BookingState.Pending || b.State == BookingState.Confirmed || b.State == BookingState.Active)
+            && b.StartTime < request.EndTime
+            && b.EndTime > request.StartTime);
 
-        if (hasActiveBooking && currentUserRole != "Admin")
-            return (null, Error(409, "User already has an active booking.", "AlreadyHasActiveBooking"), 409);
+        if (existingActiveBooking != null && currentUserRole != "Admin")
+            return (null, new ApiError
+            {
+                Message = "You already have a booking during this time window.",
+                Errors = new List<ApiErrorDetail>
+                {
+                    new()
+                    {
+                        Code = "AlreadyHasActiveBooking",
+                        Message = "You already have a booking during this time window.",
+                        Metadata = new Dictionary<string, string> { { "bookingId", existingActiveBooking.Id.ToString() } }
+                    }
+                }
+            }, 409);
 
         // Validation 8: charger availability and overlap
         var charger = await _db.Chargers.Include(c => c.Location).FirstOrDefaultAsync(c => c.Id == request.ChargerId);

@@ -13,6 +13,7 @@ public class ApiErrorDetail
     public string? Field { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+    public Dictionary<string, string>? Metadata { get; set; }
 }
 
 /// <summary>Paginated list response</summary>
