@@ -10,6 +10,7 @@ import { CsmsSyncBadge } from '../components/ui/StatusBadge';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { BookingSlotPicker, generateHourlySlots } from '../components/booking/BookingSlotPicker';
 import { useAuth } from '../hooks/useAuth';
+import { ShieldExclamationIcon } from '@heroicons/react/24/outline';
 import { cn } from '../lib/classNames';
 import { formatTimeWindow } from '../lib/formatters';
 
@@ -43,7 +44,8 @@ function getSelectableDates(): { iso: string; label: string; short: string }[] {
 export function BookingNewPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin, isWorkplace } = useAuth();
+  const canOverrideCap = isAdmin || isWorkplace;
 
   const preSelectedChargerId = searchParams.get('chargerId') ?? '';
   const preStartTime = searchParams.get('startTime') ?? '';
@@ -61,6 +63,9 @@ export function BookingNewPage() {
   const [endTime, setEndTime]     = useState(preEndTime);
   const [vehicleMake, setVehicleMake] = useState(currentUser?.eligibility?.vehicleMake ?? '');
   const [vehicleModel, setVehicleModel] = useState(currentUser?.eligibility?.vehicleModel ?? '');
+
+  const [capOverride, setCapOverride] = useState(false);
+  const [capOverrideReason, setCapOverrideReason] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
@@ -129,6 +134,7 @@ export function BookingNewPage() {
     else if (durationMinutes <= 0) e.endTime = 'End time must be after start time.';
     if (!vehicleMake.trim()) e.vehicleMake = 'Vehicle make is required.';
     if (!vehicleModel.trim()) e.vehicleModel = 'Vehicle model is required.';
+    if (capOverride && !capOverrideReason.trim()) e.capOverrideReason = 'A reason is required when overriding the daily cap.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -151,18 +157,23 @@ export function BookingNewPage() {
         vehicleMake: vehicleMake.trim(),
         vehicleModel: vehicleModel.trim(),
         onBehalfOfUserId: null,
-        reasonForOverride: null,
+        reasonForOverride: capOverride ? capOverrideReason.trim() : null,
       });
       setConfirmedBooking(booking);
     } catch (err: unknown) {
       const e = err as Error & { apiError?: { message: string; errors: { field?: string; code: string; message: string }[] } };
       if (e.apiError) {
         const fieldErrors: Record<string, string> = {};
+        let formMsg = e.apiError.message;
         e.apiError.errors.forEach((fe) => {
-          if (fe.field) fieldErrors[fe.field] = fe.message;
+          if (fe.code === 'DailyCapExceeded') {
+            formMsg = 'You have already used your 1-hour daily cap. Enable "Override daily cap" with a reason if you are authorised to exceed it.';
+          } else if (fe.field) {
+            fieldErrors[fe.field] = fe.message;
+          }
         });
         setErrors((prev) => ({ ...prev, ...fieldErrors }));
-        setFormError(e.apiError.message);
+        setFormError(formMsg);
       } else {
         setFormError('An unexpected error occurred. Please try again.');
       }
@@ -420,6 +431,73 @@ export function BookingNewPage() {
               placeholder="Model 3"
             />
           </FormField>
+
+          {/* Cap override — Admin / Workplace only */}
+          {canOverrideCap && (
+            <div className={cn(
+              'rounded-lg border p-4 space-y-3',
+              capOverride ? 'border-amber-500/60 bg-amber-900/20' : 'border-brand-600/50 bg-brand-700/20',
+            )}>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <div className="relative mt-0.5 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={capOverride}
+                    onChange={(e) => {
+                      setCapOverride(e.target.checked);
+                      if (!e.target.checked) {
+                        setCapOverrideReason('');
+                        setErrors((p) => ({ ...p, capOverrideReason: '' }));
+                      }
+                    }}
+                    className="sr-only peer"
+                    id="cap-override-toggle"
+                    aria-describedby="cap-override-desc"
+                  />
+                  <div className={cn(
+                    'w-10 h-5 rounded-full transition-colors',
+                    capOverride ? 'bg-amber-500' : 'bg-brand-600',
+                  )} />
+                  <div className={cn(
+                    'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform',
+                    capOverride ? 'translate-x-5' : 'translate-x-0',
+                  )} />
+                </div>
+                <div>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-amber-300">
+                    <ShieldExclamationIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    Override daily cap
+                  </span>
+                  <p id="cap-override-desc" className="text-xs text-gray-400 mt-0.5">
+                    Allows booking beyond the 1-hour fair-use limit. Requires a reason. This action is audit-logged.
+                  </p>
+                </div>
+              </label>
+
+              {capOverride && (
+                <FormField
+                  label="Override reason"
+                  htmlFor="cap-override-reason"
+                  error={errors.capOverrideReason}
+                  required
+                >
+                  <textarea
+                    id="cap-override-reason"
+                    value={capOverrideReason}
+                    onChange={(e) => {
+                      setCapOverrideReason(e.target.value);
+                      if (e.target.value.trim()) setErrors((p) => ({ ...p, capOverrideReason: '' }));
+                    }}
+                    rows={2}
+                    aria-required="true"
+                    aria-describedby={errors.capOverrideReason ? 'cap-override-reason-error' : undefined}
+                    className={cn(inputClasses(!!errors.capOverrideReason), 'resize-none')}
+                    placeholder="Enter reason for exceeding the daily cap…"
+                  />
+                </FormField>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
