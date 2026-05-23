@@ -10,6 +10,7 @@ import {
   ShieldCheckIcon,
   BellAlertIcon,
   ClipboardDocumentListIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../lib/classNames';
@@ -58,6 +59,7 @@ export function SidebarContent({ collapsed = false, onNavigate }: SidebarContent
     { to: '/my-bookings',         label: 'My sessions',  icon: ClipboardDocumentListIcon, visible: currentUser?.role === 'StandardUser', group: 'main' },
     { to: '/operations/bookings', label: 'Operations',   icon: ShieldCheckIcon,   visible: isOperator,                   group: 'main' },
     { to: '/reports',             label: 'Reports & ESG',icon: ChartBarIcon,      visible: canSeeReports,                group: 'main' },
+    { to: '/reports/ai',          label: 'AI Insights',  icon: SparklesIcon,      visible: canSeeReports,                group: 'main' },
     { to: '/notifications',       label: 'Notifications',icon: BellAlertIcon,     visible: true,                          group: 'main' },
 
     { to: '/admin/users',         label: 'Users',        icon: UsersIcon,                 visible: isAdmin || currentUser?.role === 'Workplace', group: 'admin' },
