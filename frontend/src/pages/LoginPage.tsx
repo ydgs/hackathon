@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth, DEMO_ACCOUNTS } from '../hooks/useAuth';
-import { login as loginService } from '../services/auth.service';
+import { login as loginService, getMe } from '../services/auth.service';
 import { Button } from '../components/ui/Button';
 import { FormField, inputClasses } from '../components/ui/FormField';
 import { cn } from '../lib/classNames';
@@ -11,8 +11,9 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('admin@nexlevel.local');
-  const [password, setPassword] = useState('demo-password');
+  // Default to first demo account (Alice)
+  const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email);
+  const [password, setPassword] = useState(DEMO_ACCOUNTS[0].password);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
@@ -35,21 +36,15 @@ export function LoginPage() {
     setAuthError('');
     setLoading(true);
     try {
-      const res = await loginService({ email, password });
-      // Find full user object (mock mode)
-      const account = DEMO_ACCOUNTS.find((a) => a.email === email);
-      if (account) {
-        login(account.user);
-      } else {
-        login({
-          id: res.user.id,
-          email: res.user.email,
-          displayName: res.user.displayName,
-          role: res.user.role,
-          eligibility: null,
-          privacy: null,
-        });
-      }
+      // Step 1: Authenticate and store JWT
+      await loginService({ email, password });
+
+      // Step 2: Fetch full user profile (eligibility + privacy) with the new token
+      const currentUser = await getMe();
+
+      // Step 3: Persist full user in auth context + localStorage
+      login(currentUser);
+
       navigate('/dashboard');
     } catch (err: unknown) {
       const e = err as Error & { apiError?: { message: string } };
@@ -79,7 +74,7 @@ export function LoginPage() {
             aria-required="true"
             aria-describedby={emailError ? 'email-error' : undefined}
             className={cn(inputClasses(!!emailError))}
-            placeholder="you@nexlevel.local"
+            placeholder="you@nexlevel.mu"
           />
         </FormField>
 
@@ -122,7 +117,7 @@ export function LoginPage() {
 
       {/* Demo quick-select */}
       <div className="mt-6 pt-5 border-t border-brand-700">
-        <p className="text-xs text-gray-500 mb-3">Demo accounts:</p>
+        <p className="text-xs text-gray-500 mb-3">Demo accounts (password: demo1234):</p>
         <div className="flex gap-2 flex-wrap">
           {DEMO_ACCOUNTS.map((account) => (
             <button

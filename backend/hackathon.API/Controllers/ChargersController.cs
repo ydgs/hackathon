@@ -16,38 +16,40 @@ public class ChargersController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAuditLogService _audit;
+    private readonly IChargerService _chargerService;
 
-    public ChargersController(AppDbContext db, IAuditLogService audit)
+    public ChargersController(AppDbContext db, IAuditLogService audit, IChargerService chargerService)
     {
         _db = db;
         _audit = audit;
+        _chargerService = chargerService;
     }
 
-    /// <summary>GET /chargers — List all chargers with current status. No pagination (max 50).</summary>
+    /// <summary>GET /chargers — List all chargers with CSMS-merged status.</summary>
     [HttpGet]
     public async Task<IActionResult> GetChargers([FromQuery] string? locationCode, [FromQuery] string? status)
     {
+        // Refresh DB statuses from CSMS before serving (graceful: never fails the request)
+        await _chargerService.SyncStatusesFromCsmsAsync();
+
         var query = _db.Chargers.Include(c => c.Location).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(locationCode))
             query = query.Where(c => c.Location.Code == locationCode);
 
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            var statuses = status.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => Enum.TryParse<ChargerStatus>(s, ignoreCase: true, out var parsed) ? parsed : (ChargerStatus?)null)
-                .Where(s => s.HasValue)
-                .Select(s => s!.Value)
-                .ToList();
-            if (statuses.Count > 0)
-                query = query.Where(c => statuses.Contains(c.Status));
-        }
-
         var chargers = await query.OrderBy(c => c.DisplayName).ToListAsync();
         var userRole = User.FindFirstValue(ClaimTypes.Role) ?? "";
         var isPrivileged = userRole is "Admin" or "Security" or "Workplace";
 
+        // Apply status filter after computing effective status
         var dtos = await Task.WhenAll(chargers.Select(async c => await MapChargerDto(c, isPrivileged)));
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var statuses = status.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var filtered = dtos.Where(d => statuses.Contains(d.Status)).ToList();
+            return Ok(new ListResponse<ChargerDto> { Data = filtered });
+        }
 
         return Ok(new ListResponse<ChargerDto> { Data = dtos.ToList() });
     }
@@ -137,13 +139,15 @@ public class ChargersController : ControllerBase
             }
         }
 
+        var effectiveStatus = await _chargerService.GetEffectiveStatusAsync(c);
+
         return new ChargerDto
         {
             Id = c.Id,
             ExternalStationId = c.ExternalStationId,
             DisplayName = c.DisplayName,
             ConnectorId = c.ConnectorId,
-            Status = c.Status.ToString(),
+            Status = effectiveStatus,
             Location = new LocationDto { Id = c.Location.Id, Name = c.Location.Name, Code = c.Location.Code },
             LastCsmsSyncAt = c.LastCsmsSyncAt,
             ActiveSession = activeSession

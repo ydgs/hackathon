@@ -1,18 +1,20 @@
 /**
  * Fetch wrapper — base URL, JSON error envelope handling.
- * Matches api-contract.md §2 base URL and §7 error shape.
+ * Matches api-conventions.md error shape.
+ *
+ * In development, Vite proxies /api/* to https://localhost:7000/api/*
+ * so we use a relative path here. This also works in production when
+ * the frontend and backend are served from the same origin.
  */
 
 import type { ApiError } from '../types';
 
-const BASE_URL = 'http://localhost:5000/api/v1';
+// Use relative path so Vite proxy works in dev and same-origin works in prod.
+// Falls back to absolute URL if VITE_API_BASE_URL is set (e.g. in CI or staging).
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
 function getToken(): string | null {
   try {
-    const user = localStorage.getItem('nexlevel_user');
-    if (!user) return null;
-    // In the real flow this would be the JWT from the login response.
-    // For mock mode, we store the user object; real JWT goes in nexlevel_token.
     return localStorage.getItem('nexlevel_token');
   } catch {
     return null;
@@ -57,5 +59,6 @@ export const apiClient = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
+  patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   delete: <T>(path: string) => request<T>('DELETE', path),
 };

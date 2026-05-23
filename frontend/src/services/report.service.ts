@@ -1,4 +1,3 @@
-// MOCK: replace USE_MOCKS=false when backend /reports is ready
 import type {
   ReportEnvelope,
   ReportSummary,
@@ -8,75 +7,39 @@ import type {
   ReportSustainability,
   AiInsights,
 } from '../types';
-import {
-  MOCK_REPORT_SUMMARY,
-  MOCK_REPORT_SESSIONS,
-  MOCK_REPORT_ENERGY,
-  MOCK_REPORT_UTILIZATION,
-  MOCK_REPORT_SUSTAINABILITY,
-  MOCK_AI_INSIGHTS,
-  MOCK_SIMULATED_LABEL,
-} from '../mocks/reports.mock';
-
-const USE_MOCKS = true;
-
-async function delay(ms = 400) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+import { apiClient } from './apiClient';
 
 type ReportParams = { dateFrom?: string; dateTo?: string; locationCode?: string; chargerId?: string };
 
-function buildEnvelope<T>(data: T, params?: ReportParams): ReportEnvelope<T> {
-  return {
-    data,
-    simulatedDataLabel: MOCK_SIMULATED_LABEL,
-    appliedFilters: {
-      dateFrom: params?.dateFrom ?? null,
-      dateTo: params?.dateTo ?? null,
-      locationCode: params?.locationCode ?? null,
-      chargerId: params?.chargerId ?? null,
-    },
-  };
+function buildQs(params?: ReportParams): string {
+  const qs = new URLSearchParams();
+  if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+  if (params?.dateTo) qs.set('dateTo', params.dateTo);
+  if (params?.locationCode) qs.set('locationCode', params.locationCode);
+  if (params?.chargerId) qs.set('chargerId', params.chargerId);
+  return qs.toString() ? '?' + qs : '';
 }
 
 export async function getReportSummary(params?: ReportParams): Promise<ReportEnvelope<ReportSummary>> {
-  await delay();
-  if (USE_MOCKS) return buildEnvelope(MOCK_REPORT_SUMMARY, params);
-  const { apiClient } = await import('./apiClient');
-  return apiClient.get<ReportEnvelope<ReportSummary>>('/reports/summary');
+  return apiClient.get<ReportEnvelope<ReportSummary>>(`/reports/summary${buildQs(params)}`);
 }
 
 export async function getReportSessions(params?: ReportParams): Promise<ReportEnvelope<ReportSessions>> {
-  await delay();
-  if (USE_MOCKS) return buildEnvelope(MOCK_REPORT_SESSIONS, params);
-  const { apiClient } = await import('./apiClient');
-  return apiClient.get<ReportEnvelope<ReportSessions>>('/reports/sessions');
+  return apiClient.get<ReportEnvelope<ReportSessions>>(`/reports/sessions${buildQs(params)}`);
 }
 
 export async function getReportEnergy(params?: ReportParams): Promise<ReportEnvelope<ReportEnergy>> {
-  await delay();
-  if (USE_MOCKS) return buildEnvelope(MOCK_REPORT_ENERGY, params);
-  const { apiClient } = await import('./apiClient');
-  return apiClient.get<ReportEnvelope<ReportEnergy>>('/reports/energy');
+  return apiClient.get<ReportEnvelope<ReportEnergy>>(`/reports/energy${buildQs(params)}`);
 }
 
 export async function getReportUtilization(params?: ReportParams): Promise<ReportEnvelope<ReportUtilization>> {
-  await delay();
-  if (USE_MOCKS) return buildEnvelope(MOCK_REPORT_UTILIZATION, params);
-  const { apiClient } = await import('./apiClient');
-  return apiClient.get<ReportEnvelope<ReportUtilization>>('/reports/utilization');
+  return apiClient.get<ReportEnvelope<ReportUtilization>>(`/reports/utilization${buildQs(params)}`);
 }
 
 export async function getReportSustainability(params?: ReportParams): Promise<ReportEnvelope<ReportSustainability>> {
-  await delay();
-  if (USE_MOCKS) return buildEnvelope(MOCK_REPORT_SUSTAINABILITY, params);
-  const { apiClient } = await import('./apiClient');
-  return apiClient.get<ReportEnvelope<ReportSustainability>>('/reports/sustainability');
+  return apiClient.get<ReportEnvelope<ReportSustainability>>(`/reports/sustainability${buildQs(params)}`);
 }
 
-export async function getAiInsights(_params?: ReportParams): Promise<AiInsights> {
-  await delay(600);
-  if (USE_MOCKS) return MOCK_AI_INSIGHTS;
-  const { apiClient } = await import('./apiClient');
-  return apiClient.get<AiInsights>('/ai/insights');
+export async function getAiInsights(params?: ReportParams): Promise<AiInsights> {
+  return apiClient.get<AiInsights>(`/ai/insights${buildQs(params)}`);
 }

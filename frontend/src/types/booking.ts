@@ -78,3 +78,7 @@ export interface OverrideBookingRequest {
   newEndTime: string;
   reason: string;
 }
+
+export interface OperatorReleaseRequest {
+  reason: string;
+}

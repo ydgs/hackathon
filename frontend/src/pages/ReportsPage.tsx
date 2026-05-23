@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { ReportSummary, ReportSessions, ReportEnergy, AiInsights, ReportSustainability, ReportUtilization } from '../types';
 import {
   getReportSummary, getReportSessions, getReportEnergy,
@@ -23,7 +24,11 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export function ReportsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as Tab | null) ?? 'overview';
+  const [activeTab, setActiveTab] = useState<Tab>(
+    TABS.some((t) => t.id === initialTab) ? initialTab : 'overview',
+  );
   const [simulatedLabel, setSimulatedLabel] = useState<string | null>('Based on simulated demo data');
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);

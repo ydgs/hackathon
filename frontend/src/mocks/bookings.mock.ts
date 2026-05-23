@@ -2,6 +2,13 @@
 
 import type { Booking } from '../types';
 
+/** Helper: return an ISO date string N days from today (YYYY-MM-DD). */
+function daysFromToday(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
+
 export const MOCK_BOOKINGS: Booking[] = [
   {
     id: 'bk-001',
@@ -119,7 +126,7 @@ export const MOCK_BOOKINGS: Booking[] = [
     userId: 'usr-bob-002',
     userDisplayName: 'Bob Driver',
     chargerId: 'chr-nex-001',
-    chargerDisplayName: 'NEX Tower Charger 1',
+    chargerDisplayName: 'NEX Tower CH-01',
     locationCode: 'NEX-TOWER',
     startTime: '2026-05-21T14:00:00Z',
     endTime: '2026-05-21T15:00:00Z',
@@ -132,5 +139,85 @@ export const MOCK_BOOKINGS: Booking[] = [
     actorUserId: null,
     createdAt: '2026-05-21T13:30:00Z',
     updatedAt: '2026-05-21T14:40:00Z',
+  },
+
+  // ── Tomorrow's bookings (demo: future date navigation) ──────────────────────
+  {
+    id: 'bk-007',
+    userId: 'usr-alice-001',
+    userDisplayName: 'Alice Standard',
+    chargerId: 'chr-nex-001',
+    chargerDisplayName: 'NEX Tower CH-01',
+    locationCode: 'NEX-TOWER',
+    startTime: `${daysFromToday(1)}T09:00:00Z`,
+    endTime:   `${daysFromToday(1)}T10:00:00Z`,
+    state: 'Confirmed',
+    vehicleMake: 'Tesla',
+    vehicleModel: 'Model 3',
+    csmsIdTag: 'EID-00123-DEMO-TOM',
+    csmsSyncStatus: 'AuthorizationPending',
+    reasonForOverride: null,
+    actorUserId: null,
+    createdAt: `${daysFromToday(0)}T07:30:00Z`,
+    updatedAt: `${daysFromToday(0)}T07:30:00Z`,
+  },
+  {
+    id: 'bk-008',
+    userId: 'usr-bob-002',
+    userDisplayName: 'Bob Driver',
+    chargerId: 'chr-nex-003',
+    chargerDisplayName: 'NEX Tower CH-03',
+    locationCode: 'NEX-TOWER',
+    startTime: `${daysFromToday(1)}T11:00:00Z`,
+    endTime:   `${daysFromToday(1)}T12:00:00Z`,
+    state: 'Confirmed',
+    vehicleMake: 'Renault',
+    vehicleModel: 'Zoe',
+    csmsIdTag: 'EID-00456-DEMO-TOM',
+    csmsSyncStatus: 'AuthorizationPending',
+    reasonForOverride: null,
+    actorUserId: null,
+    createdAt: `${daysFromToday(0)}T08:00:00Z`,
+    updatedAt: `${daysFromToday(0)}T08:00:00Z`,
+  },
+  {
+    id: 'bk-009',
+    userId: 'usr-eva-005',
+    userDisplayName: 'Eva Workplace',
+    chargerId: 'chr-nxt-001',
+    chargerDisplayName: 'NEXTERACOM CH-01',
+    locationCode: 'NEXTERACOM',
+    startTime: `${daysFromToday(1)}T14:00:00Z`,
+    endTime:   `${daysFromToday(1)}T15:00:00Z`,
+    state: 'Confirmed',
+    vehicleMake: 'Nissan',
+    vehicleModel: 'Leaf',
+    csmsIdTag: 'EID-00789-DEMO-TOM',
+    csmsSyncStatus: 'AuthorizationPending',
+    reasonForOverride: null,
+    actorUserId: null,
+    createdAt: `${daysFromToday(0)}T09:00:00Z`,
+    updatedAt: `${daysFromToday(0)}T09:00:00Z`,
+  },
+
+  // ── Two days ahead (demo: future date navigation) ────────────────────────────
+  {
+    id: 'bk-010',
+    userId: 'usr-alice-001',
+    userDisplayName: 'Alice Standard',
+    chargerId: 'chr-nex-002',
+    chargerDisplayName: 'NEX Tower CH-02',
+    locationCode: 'NEX-TOWER',
+    startTime: `${daysFromToday(2)}T10:00:00Z`,
+    endTime:   `${daysFromToday(2)}T11:00:00Z`,
+    state: 'Confirmed',
+    vehicleMake: 'Tesla',
+    vehicleModel: 'Model 3',
+    csmsIdTag: 'EID-00123-DEMO-D2',
+    csmsSyncStatus: 'AuthorizationPending',
+    reasonForOverride: null,
+    actorUserId: null,
+    createdAt: `${daysFromToday(0)}T07:45:00Z`,
+    updatedAt: `${daysFromToday(0)}T07:45:00Z`,
   },
 ];
