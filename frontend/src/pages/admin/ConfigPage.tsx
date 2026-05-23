@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { Button } from '../../components/ui/Button';
 import { FormField, inputClasses } from '../../components/ui/FormField';
+import { ErrorBanner } from '../../components/ui/ErrorBanner';
 import { useToast } from '../../hooks/useToast';
+import { getConfig, updateConfig } from '../../services/config.service';
 import { cn } from '../../lib/classNames';
 
-// MOCK: replace with GET/PUT /api/v1/config when backend is ready
 interface SystemConfig {
   defaultBookingDurationMinutes: number;
   maxBookingDurationMinutes: number;
@@ -15,7 +16,7 @@ interface SystemConfig {
   maintenanceNotificationLeadHours: number;
 }
 
-const INITIAL_CONFIG: SystemConfig = {
+const DEFAULTS: SystemConfig = {
   defaultBookingDurationMinutes: 60,
   maxBookingDurationMinutes: 480,
   gracePeriodMinutes: 15,
@@ -24,11 +25,37 @@ const INITIAL_CONFIG: SystemConfig = {
   maintenanceNotificationLeadHours: 24,
 };
 
+function parseConfig(entries: { key: string; value: string }[]): SystemConfig {
+  const map: Record<string, string> = {};
+  entries.forEach((e) => { map[e.key] = e.value; });
+  return {
+    defaultBookingDurationMinutes: parseInt(map['defaultBookingDurationMinutes'] ?? String(DEFAULTS.defaultBookingDurationMinutes), 10),
+    maxBookingDurationMinutes: parseInt(map['maxBookingDurationMinutes'] ?? String(DEFAULTS.maxBookingDurationMinutes), 10),
+    gracePeriodMinutes: parseInt(map['gracePeriodMinutes'] ?? String(DEFAULTS.gracePeriodMinutes), 10),
+    maxActiveBookingsPerUser: parseInt(map['maxActiveBookingsPerUser'] ?? String(DEFAULTS.maxActiveBookingsPerUser), 10),
+    bookingWindowDays: parseInt(map['bookingWindowDays'] ?? String(DEFAULTS.bookingWindowDays), 10),
+    maintenanceNotificationLeadHours: parseInt(map['maintenanceNotificationLeadHours'] ?? String(DEFAULTS.maintenanceNotificationLeadHours), 10),
+  };
+}
+
+function toEntries(config: SystemConfig) {
+  return Object.entries(config).map(([key, value]) => ({ key, value: String(value) }));
+}
+
 export function ConfigPage() {
   const { showToast } = useToast();
-  const [config, setConfig] = useState<SystemConfig>(INITIAL_CONFIG);
+  const [config, setConfig] = useState<SystemConfig>(DEFAULTS);
   const [errors, setErrors] = useState<Partial<Record<keyof SystemConfig, string>>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    getConfig()
+      .then((res) => setConfig(parseConfig(res.data)))
+      .catch(() => setLoadError('Failed to load configuration. Showing defaults.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const set = (field: keyof SystemConfig) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value, 10);
@@ -56,10 +83,15 @@ export function ConfigPage() {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    // MOCK: replace with PUT /api/v1/config
-    await new Promise((r) => setTimeout(r, 500));
-    setSaving(false);
-    showToast('success', 'System configuration saved.');
+    try {
+      const res = await updateConfig(toEntries(config));
+      setConfig(parseConfig(res.data));
+      showToast('success', 'System configuration saved.');
+    } catch {
+      showToast('error', 'Failed to save configuration. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -68,6 +100,8 @@ export function ConfigPage() {
         <Cog6ToothIcon className="h-7 w-7 text-brand-400" aria-hidden="true" />
         <h1 className="text-2xl font-bold text-white">System Configuration</h1>
       </div>
+
+      {loadError && <ErrorBanner message={loadError} dismissable />}
 
       <div className="bg-brand-800 rounded-card border border-brand-700/40">
         <div className="px-6 py-4 border-b border-brand-700">
@@ -89,6 +123,7 @@ export function ConfigPage() {
                 max={480}
                 value={config.defaultBookingDurationMinutes}
                 onChange={set('defaultBookingDurationMinutes')}
+                disabled={loading}
                 className={cn(inputClasses(!!errors.defaultBookingDurationMinutes))}
               />
             </FormField>
@@ -106,6 +141,7 @@ export function ConfigPage() {
                 max={1440}
                 value={config.maxBookingDurationMinutes}
                 onChange={set('maxBookingDurationMinutes')}
+                disabled={loading}
                 className={cn(inputClasses(!!errors.maxBookingDurationMinutes))}
               />
             </FormField>
@@ -123,6 +159,7 @@ export function ConfigPage() {
                 max={60}
                 value={config.gracePeriodMinutes}
                 onChange={set('gracePeriodMinutes')}
+                disabled={loading}
                 className={cn(inputClasses(!!errors.gracePeriodMinutes))}
               />
             </FormField>
@@ -140,6 +177,7 @@ export function ConfigPage() {
                 max={10}
                 value={config.maxActiveBookingsPerUser}
                 onChange={set('maxActiveBookingsPerUser')}
+                disabled={loading}
                 className={cn(inputClasses(!!errors.maxActiveBookingsPerUser))}
               />
             </FormField>
@@ -157,6 +195,7 @@ export function ConfigPage() {
                 max={90}
                 value={config.bookingWindowDays}
                 onChange={set('bookingWindowDays')}
+                disabled={loading}
                 className={cn(inputClasses(!!errors.bookingWindowDays))}
               />
             </FormField>
@@ -172,25 +211,18 @@ export function ConfigPage() {
                 max={168}
                 value={config.maintenanceNotificationLeadHours}
                 onChange={set('maintenanceNotificationLeadHours')}
+                disabled={loading}
                 className={cn(inputClasses())}
               />
             </FormField>
           </div>
 
           <div className="pt-2">
-            <Button type="submit" variant="primary" size="md" loading={saving}>
+            <Button type="submit" variant="primary" size="md" loading={saving} disabled={loading}>
               {saving ? 'Saving…' : 'Save Configuration'}
             </Button>
           </div>
         </form>
-      </div>
-
-      <div className="bg-amber-900/20 border border-amber-700/40 rounded-card px-6 py-4">
-        <p className="text-sm text-amber-300 font-medium">Mock data notice</p>
-        <p className="text-xs text-amber-400/80 mt-1">
-          Configuration changes are stored in component state only and will not persist after page reload.
-          Connect to PUT /api/v1/config to enable persistence.
-        </p>
       </div>
     </div>
   );

@@ -32,10 +32,8 @@ export function ProfilePage() {
     setSaving(true);
     setSaveError('');
     try {
-      // MOCK: update vehicle via service
-      const eligibilityId = currentUser?.eligibility ? 'eu-001' : null;
-      if (eligibilityId) {
-        await updateEligibleUser(eligibilityId, { vehicleMake, vehicleModel });
+      if (currentUser?.eligibility) {
+        await updateEligibleUser(currentUser.id, { vehicleMake, vehicleModel });
       }
       // Update local user context
       if (currentUser && currentUser.eligibility) {
