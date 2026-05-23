@@ -19,6 +19,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // OCPP simulator — http://localhost:3000/api/
+      // Frontend calls /ocpp/api/... → http://localhost:3000/api/...
+      '/ocpp': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ocpp/, ''),
+      },
     },
   },
 })

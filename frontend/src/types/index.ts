@@ -6,3 +6,4 @@ export * from './booking';
 export * from './notification';
 export * from './user';
 export * from './report';
+export * from './ocpp';
