@@ -48,8 +48,10 @@ public class BookingsController : ControllerBase
         // Apply filters
         if (!string.IsNullOrWhiteSpace(query.State))
         {
-            var states = query.State.Split(',').Select(s => s.Trim()).ToList();
-            q = q.Where(b => states.Contains(b.State.ToString()));
+            var stateEnums = query.State.Split(',')
+                .Select(s => Enum.TryParse<BookingState>(s.Trim(), out var e) ? e : (BookingState?)null)
+                .Where(e => e.HasValue).Select(e => e!.Value).ToList();
+            q = q.Where(b => stateEnums.Contains(b.State));
         }
         if (query.ChargerId.HasValue) q = q.Where(b => b.ChargerId == query.ChargerId.Value);
         if (!string.IsNullOrWhiteSpace(query.LocationCode)) q = q.Where(b => b.Charger.Location.Code == query.LocationCode);
@@ -57,8 +59,10 @@ public class BookingsController : ControllerBase
         if (query.DateTo.HasValue) q = q.Where(b => b.StartTime < query.DateTo.Value);
         if (!string.IsNullOrWhiteSpace(query.CsmsSyncStatus))
         {
-            var syncStatuses = query.CsmsSyncStatus.Split(',').Select(s => s.Trim()).ToList();
-            q = q.Where(b => syncStatuses.Contains(b.CsmsSyncStatus.ToString()));
+            var syncStatusEnums = query.CsmsSyncStatus.Split(',')
+                .Select(s => Enum.TryParse<CsmsSyncStatus>(s.Trim(), out var e) ? e : (CsmsSyncStatus?)null)
+                .Where(e => e.HasValue).Select(e => e!.Value).ToList();
+            q = q.Where(b => syncStatusEnums.Contains(b.CsmsSyncStatus));
         }
 
         // Sort
