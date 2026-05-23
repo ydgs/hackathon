@@ -34,8 +34,13 @@ public class ChargersController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(status))
         {
-            var statuses = status.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            query = query.Where(c => statuses.Contains(c.Status.ToString()));
+            var statuses = status.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => Enum.TryParse<ChargerStatus>(s, ignoreCase: true, out var parsed) ? parsed : (ChargerStatus?)null)
+                .Where(s => s.HasValue)
+                .Select(s => s!.Value)
+                .ToList();
+            if (statuses.Count > 0)
+                query = query.Where(c => statuses.Contains(c.Status));
         }
 
         var chargers = await query.OrderBy(c => c.DisplayName).ToListAsync();
