@@ -62,9 +62,11 @@ builder.Services.AddHttpClient<ICsmsClient, CsmsClient>(client =>
 });
 
 // ── Application Services ──────────────────────────────────────────────────
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IChargerService, ChargerService>();
 
 // ── Controllers ───────────────────────────────────────────────────────────
 builder.Services.AddControllers()
