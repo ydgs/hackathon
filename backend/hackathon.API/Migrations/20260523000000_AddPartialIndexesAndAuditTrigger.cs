@@ -17,19 +17,19 @@ namespace hackathon.API.Migrations
         {
             // Partial index: active maintenance blocks only (fast lookup in booking validation)
             migrationBuilder.Sql(
-                @"CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_maintenance_blocks_is_active
+                @"CREATE INDEX IF NOT EXISTS ix_maintenance_blocks_is_active
                   ON maintenance_blocks (charger_id)
                   WHERE is_active = true;");
 
             // Partial index: current privacy notice (fast booking gate check)
             migrationBuilder.Sql(
-                @"CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_privacy_notices_is_current
+                @"CREATE INDEX IF NOT EXISTS ix_privacy_notices_is_current
                   ON privacy_notices (id)
                   WHERE is_current_version = true;");
 
             // Partial index: unread notifications per user (fast unread-badge query)
             migrationBuilder.Sql(
-                @"CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_notifications_unread
+                @"CREATE INDEX IF NOT EXISTS ix_notifications_unread
                   ON notifications (audience_user_id)
                   WHERE read_state = false;");
 
@@ -55,9 +55,9 @@ namespace hackathon.API.Migrations
         {
             migrationBuilder.Sql("DROP TRIGGER IF EXISTS trg_audit_logs_immutable ON audit_logs;");
             migrationBuilder.Sql("DROP FUNCTION IF EXISTS fn_audit_logs_immutable;");
-            migrationBuilder.Sql("DROP INDEX CONCURRENTLY IF EXISTS ix_maintenance_blocks_is_active;");
-            migrationBuilder.Sql("DROP INDEX CONCURRENTLY IF EXISTS ix_privacy_notices_is_current;");
-            migrationBuilder.Sql("DROP INDEX CONCURRENTLY IF EXISTS ix_notifications_unread;");
+            migrationBuilder.Sql("DROP INDEX IF EXISTS ix_maintenance_blocks_is_active;");
+            migrationBuilder.Sql("DROP INDEX IF EXISTS ix_privacy_notices_is_current;");
+            migrationBuilder.Sql("DROP INDEX IF EXISTS ix_notifications_unread;");
         }
     }
 }

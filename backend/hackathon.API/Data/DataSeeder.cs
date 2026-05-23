@@ -18,21 +18,21 @@ public static class DataSeeder
     private static readonly Guid ChargerNC3Id = Guid.Parse("c2000003-0002-0002-0002-000000000003");
     private static readonly Guid ChargerNC4Id = Guid.Parse("c2000004-0002-0002-0002-000000000004");
 
-    private static readonly Guid UserAliceId = Guid.Parse("u0000001-0001-0001-0001-000000000001");
-    private static readonly Guid UserBobId = Guid.Parse("u0000002-0002-0002-0002-000000000002");
-    private static readonly Guid UserCarolId = Guid.Parse("u0000003-0003-0003-0003-000000000003");
-    private static readonly Guid UserDaveId = Guid.Parse("u0000004-0004-0004-0004-000000000004");
-    private static readonly Guid UserEmmaId = Guid.Parse("u0000005-0005-0005-0005-000000000005");
-    private static readonly Guid UserFrankId = Guid.Parse("u0000006-0006-0006-0006-000000000006");
-    private static readonly Guid UserGraceId = Guid.Parse("u0000007-0007-0007-0007-000000000007");
+    private static readonly Guid UserAliceId = Guid.Parse("90000001-0001-0001-0001-000000000001");
+    private static readonly Guid UserBobId = Guid.Parse("90000002-0002-0002-0002-000000000002");
+    private static readonly Guid UserCarolId = Guid.Parse("90000003-0003-0003-0003-000000000003");
+    private static readonly Guid UserDaveId = Guid.Parse("90000004-0004-0004-0004-000000000004");
+    private static readonly Guid UserEmmaId = Guid.Parse("90000005-0005-0005-0005-000000000005");
+    private static readonly Guid UserFrankId = Guid.Parse("90000006-0006-0006-0006-000000000006");
+    private static readonly Guid UserGraceId = Guid.Parse("90000007-0007-0007-0007-000000000007");
 
     private static readonly Guid EligibleAliceId = Guid.Parse("e0000001-0001-0001-0001-000000000001");
     private static readonly Guid EligibleBobId = Guid.Parse("e0000002-0002-0002-0002-000000000002");
     private static readonly Guid EligibleSuspendedId = Guid.Parse("e0000003-0003-0003-0003-000000000003");
     private static readonly Guid EligibleInactiveId = Guid.Parse("e0000004-0004-0004-0004-000000000004");
 
-    private static readonly Guid PrivacyNoticeV1Id = Guid.Parse("p0000001-0001-0001-0001-000000000001");
-    private static readonly Guid PrivacyAckAliceId = Guid.Parse("pa000001-0001-0001-0001-000000000001");
+    private static readonly Guid PrivacyNoticeV1Id = Guid.Parse("f0000001-0001-0001-0001-000000000001");
+    private static readonly Guid PrivacyAckAliceId = Guid.Parse("fa000001-0001-0001-0001-000000000001");
 
     private static readonly Guid BookingAliceConfirmedId = Guid.Parse("b0000001-0001-0001-0001-000000000001");
     private static readonly Guid BookingAliceActiveId = Guid.Parse("b0000002-0002-0002-0002-000000000002");
@@ -40,12 +40,12 @@ public static class DataSeeder
     private static readonly Guid BookingBobCancelledId = Guid.Parse("b0000004-0004-0004-0004-000000000004");
     private static readonly Guid BookingAliceNoShowId = Guid.Parse("b0000005-0005-0005-0005-000000000005");
 
-    private static readonly Guid SessionAliceConfirmedId = Guid.Parse("s0000001-0001-0001-0001-000000000001");
-    private static readonly Guid SessionAliceActiveId = Guid.Parse("s0000002-0002-0002-0002-000000000002");
-    private static readonly Guid SessionAliceCompletedId = Guid.Parse("s0000003-0003-0003-0003-000000000003");
-    private static readonly Guid SessionAliceNoShowId = Guid.Parse("s0000005-0005-0005-0005-000000000005");
+    private static readonly Guid SessionAliceConfirmedId = Guid.Parse("50000001-0001-0001-0001-000000000001");
+    private static readonly Guid SessionAliceActiveId = Guid.Parse("50000002-0002-0002-0002-000000000002");
+    private static readonly Guid SessionAliceCompletedId = Guid.Parse("50000003-0003-0003-0003-000000000003");
+    private static readonly Guid SessionAliceNoShowId = Guid.Parse("50000005-0005-0005-0005-000000000005");
 
-    private static readonly Guid MaintenanceBlockId = Guid.Parse("m0000001-0001-0001-0001-000000000001");
+    private static readonly Guid MaintenanceBlockId = Guid.Parse("d0000001-0001-0001-0001-000000000001");
 
     public static async Task SeedAsync(AppDbContext db)
     {

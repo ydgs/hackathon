@@ -41,8 +41,10 @@ public class ChargersController : ControllerBase
         var userRole = User.FindFirstValue(ClaimTypes.Role) ?? "";
         var isPrivileged = userRole is "Admin" or "Security" or "Workplace";
 
-        // Apply status filter after computing effective status
-        var dtos = await Task.WhenAll(chargers.Select(async c => await MapChargerDto(c, isPrivileged)));
+        // Apply status filter after computing effective status (sequential — DbContext is not thread-safe)
+        var dtos = new List<ChargerDto>();
+        foreach (var c in chargers)
+            dtos.Add(await MapChargerDto(c, isPrivileged));
 
         if (!string.IsNullOrWhiteSpace(status))
         {
