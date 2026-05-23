@@ -65,6 +65,7 @@ export function SidebarContent({ collapsed = false, onNavigate }: SidebarContent
     { to: '/admin/users',         label: 'Users',        icon: UsersIcon,                 visible: isAdmin || currentUser?.role === 'Workplace', group: 'admin' },
     { to: '/admin/maintenance',   label: 'Maintenance',  icon: WrenchScrewdriverIcon,     visible: isAdmin || currentUser?.role === 'Workplace', group: 'admin' },
     { to: '/admin/audit',         label: 'Audit log',    icon: ClipboardDocumentListIcon, visible: isAdmin,                                       group: 'admin' },
+    { to: '/admin/notifications', label: 'Notif. Audit', icon: BellAlertIcon,             visible: isAdmin,                                       group: 'admin' },
     { to: '/admin/config',        label: 'Config',       icon: Cog6ToothIcon,             visible: isAdmin,                                       group: 'admin' },
   ];
 

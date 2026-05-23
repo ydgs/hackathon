@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react';
-import { BellIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useCallback } from 'react';
+import { BellIcon, EyeIcon } from '@heroicons/react/24/outline';
 import type { NotificationAuditItem } from '../../types';
 import { getNotificationAudit } from '../../services/notification.service';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorBanner } from '../../components/ui/ErrorBanner';
 import { TableRowSkeleton } from '../../components/ui/LoadingSkeleton';
+import { Modal } from '../../components/ui/Modal';
 import { formatDatetime } from '../../lib/formatters';
 import { cn } from '../../lib/classNames';
 import { inputClasses } from '../../components/ui/FormField';
 
-// MOCK: replace with GET /api/v1/notifications/audit when backend is ready
 export function NotificationsAuditPage() {
   const [entries, setEntries] = useState<NotificationAuditItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [channelFilter, setChannelFilter] = useState('');
+  const [previewEntry, setPreviewEntry] = useState<NotificationAuditItem | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -27,9 +28,9 @@ export function NotificationsAuditPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const filtered = entries.filter((e) =>
     !channelFilter || e.channel === channelFilter,
@@ -43,6 +44,9 @@ export function NotificationsAuditPage() {
       default: return 'bg-gray-700/60 text-gray-300';
     }
   };
+
+  const hasPreview = (e: NotificationAuditItem) =>
+    e.channel !== 'InApp' && e.payload !== null;
 
   return (
     <div className="space-y-5">
@@ -77,11 +81,11 @@ export function NotificationsAuditPage() {
         <>
           {/* Desktop table */}
           <div className="hidden md:block bg-brand-800 rounded-card overflow-x-auto">
-            <table className="w-full text-sm min-w-[800px]">
+            <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="border-b border-brand-700">
-                  {['Timestamp', 'Correlation ID', 'Channel', 'Trigger Event', 'Recipient', 'Delivery Status'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-gray-300 font-medium whitespace-nowrap">{h}</th>
+                  {['Timestamp', 'Correlation ID', 'Channel', 'Trigger Event', 'Recipient', 'Delivery Status', ''].map((h, idx) => (
+                    <th key={idx} className="text-left px-4 py-3 text-gray-300 font-medium whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -97,6 +101,18 @@ export function NotificationsAuditPage() {
                       <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium', deliveryStatusColor(e.deliveryStatus))}>
                         {e.deliveryStatus}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {hasPreview(e) && (
+                        <button
+                          onClick={() => setPreviewEntry(e)}
+                          className="flex items-center gap-1 text-xs text-brand-300 hover:text-white transition-colors"
+                          aria-label={`Preview payload for ${e.triggerEvent}`}
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                          Preview
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -115,6 +131,15 @@ export function NotificationsAuditPage() {
                   <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium', deliveryStatusColor(e.deliveryStatus))}>
                     {e.deliveryStatus}
                   </span>
+                  {hasPreview(e) && (
+                    <button
+                      onClick={() => setPreviewEntry(e)}
+                      className="flex items-center gap-1 text-xs text-brand-300 hover:text-white transition-colors"
+                    >
+                      <EyeIcon className="h-3.5 w-3.5" />
+                      Preview
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500">{e.audienceUserDisplayName}</p>
               </div>
@@ -122,6 +147,57 @@ export function NotificationsAuditPage() {
           </div>
         </>
       )}
+
+      {/* Payload preview modal */}
+      <Modal
+        open={previewEntry !== null}
+        title={previewEntry ? `${previewEntry.channel} Payload — ${previewEntry.triggerEvent}` : ''}
+        onClose={() => setPreviewEntry(null)}
+        className="max-w-2xl"
+      >
+        {previewEntry && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              <span className="text-gray-400">Channel</span>
+              <span className="text-white">{previewEntry.channel}</span>
+              <span className="text-gray-400">Recipient</span>
+              <span className="text-white">{previewEntry.audienceUserDisplayName}</span>
+              <span className="text-gray-400">Status</span>
+              <span className={cn('inline-flex w-fit items-center px-2 py-0.5 rounded-full text-xs font-medium', deliveryStatusColor(previewEntry.deliveryStatus))}>
+                {previewEntry.deliveryStatus}
+              </span>
+            </div>
+
+            {previewEntry.channel === 'Email' ? (
+              <div className="space-y-3">
+                {'subject' in (previewEntry.payload ?? {}) && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-400 mb-1">Subject</p>
+                    <p className="text-sm text-white bg-brand-700/40 rounded px-3 py-2">
+                      {String((previewEntry.payload as Record<string, unknown>).subject)}
+                    </p>
+                  </div>
+                )}
+                {'body' in (previewEntry.payload ?? {}) && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-400 mb-1">Body</p>
+                    <div className="text-sm text-gray-200 bg-brand-700/40 rounded px-3 py-2 whitespace-pre-wrap max-h-64 overflow-y-auto">
+                      {String((previewEntry.payload as Record<string, unknown>).body)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-medium text-gray-400 mb-1">Adaptive Card JSON</p>
+                <pre className="text-xs text-gray-200 bg-brand-900/60 rounded p-3 overflow-x-auto max-h-72 overflow-y-auto whitespace-pre-wrap break-words">
+                  {JSON.stringify(previewEntry.payload, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
