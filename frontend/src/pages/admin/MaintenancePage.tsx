@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WrenchScrewdriverIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -6,7 +6,9 @@ import { FormField, inputClasses } from '../../components/ui/FormField';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useToast } from '../../hooks/useToast';
 import { cn } from '../../lib/classNames';
-import { MOCK_CHARGERS } from '../../mocks/chargers.mock';
+import { getChargers } from '../../services/charger.service';
+import type { Charger } from '../../types';
+import { apiClient } from '../../services/apiClient';
 
 interface MaintenanceBlock {
   id: string;
@@ -18,14 +20,13 @@ interface MaintenanceBlock {
   isActive: boolean;
 }
 
-// MOCK: replace with real API calls to POST/DELETE /api/v1/maintenance-blocks when backend is ready
-const initialBlocks: MaintenanceBlock[] = [];
-
 export function MaintenancePage() {
   const { showToast } = useToast();
-  const [blocks, setBlocks] = useState<MaintenanceBlock[]>(initialBlocks);
+  const [blocks, setBlocks] = useState<MaintenanceBlock[]>([]);
+  const [chargers, setChargers] = useState<Charger[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [loadingChargers, setLoadingChargers] = useState(true);
 
   const [form, setForm] = useState({
     chargerId: '',
@@ -35,6 +36,14 @@ export function MaintenancePage() {
     forceRelease: false,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Load available chargers on mount
+  useEffect(() => {
+    getChargers()
+      .then((res) => setChargers(res.data))
+      .catch(() => showToast('error', 'Failed to load chargers.'))
+      .finally(() => setLoadingChargers(false));
+  }, [showToast]);
 
   const set = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -49,27 +58,56 @@ export function MaintenancePage() {
     if (Object.keys(errs).length > 0) return;
 
     setCreating(true);
-    await new Promise((r) => setTimeout(r, 400));
-    const charger = MOCK_CHARGERS.find((c) => c.id === form.chargerId);
-    const block: MaintenanceBlock = {
-      id: `mb-${Date.now()}`,
-      chargerId: form.chargerId,
-      chargerName: charger?.displayName ?? form.chargerId,
-      startTime: form.startTime,
-      endTime: form.endTime || null,
-      reason: form.reason,
-      isActive: true,
-    };
-    setBlocks((prev) => [block, ...prev]);
-    setCreateOpen(false);
-    setCreating(false);
-    showToast('success', 'Maintenance block created.');
+    try {
+      const payload: Record<string, unknown> = {
+        chargerId: form.chargerId,
+        startTime: new Date(form.startTime).toISOString(),
+        reason: form.reason,
+        forceReleaseExistingBookings: form.forceRelease,
+      };
+      if (form.endTime) {
+        payload.endTime = new Date(form.endTime).toISOString();
+      }
+
+      const created = await apiClient.post<{
+        id: string;
+        chargerId: string;
+        startTime: string;
+        endTime: string | null;
+        reason: string;
+        isActive: boolean;
+      }>('/maintenance-blocks', payload);
+
+      const charger = chargers.find((c) => c.id === form.chargerId);
+      const block: MaintenanceBlock = {
+        id: created.id,
+        chargerId: created.chargerId,
+        chargerName: charger?.displayName ?? form.chargerId,
+        startTime: created.startTime,
+        endTime: created.endTime,
+        reason: created.reason,
+        isActive: created.isActive,
+      };
+      setBlocks((prev) => [block, ...prev]);
+      setCreateOpen(false);
+      setForm({ chargerId: '', startTime: '', endTime: '', reason: '', forceRelease: false });
+      showToast('success', 'Maintenance block created.');
+    } catch (err: unknown) {
+      const e = err as Error & { apiError?: { message: string } };
+      showToast('error', e.apiError?.message ?? 'Failed to create maintenance block.');
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleRemove = async (id: string) => {
-    await new Promise((r) => setTimeout(r, 300));
-    setBlocks((prev) => prev.filter((b) => b.id !== id));
-    showToast('success', 'Maintenance block removed.');
+    try {
+      await apiClient.delete(`/maintenance-blocks/${id}`);
+      setBlocks((prev) => prev.filter((b) => b.id !== id));
+      showToast('success', 'Maintenance block removed.');
+    } catch {
+      showToast('error', 'Failed to remove maintenance block.');
+    }
   };
 
   return (
@@ -120,10 +158,11 @@ export function MaintenancePage() {
           <FormField label="Charger" htmlFor="mb-charger" error={formErrors.chargerId} required>
             <select id="mb-charger" value={form.chargerId}
               onChange={(e) => { set('chargerId', e.target.value); setFormErrors((p) => ({ ...p, chargerId: '' })); }}
-              className={cn(inputClasses(!!formErrors.chargerId))}>
-              <option value="">Select a charger</option>
-              {MOCK_CHARGERS.map((c) => (
-                <option key={c.id} value={c.id}>{c.displayName}</option>
+              className={cn(inputClasses(!!formErrors.chargerId))}
+              disabled={loadingChargers}>
+              <option value="">{loadingChargers ? 'Loading chargers…' : 'Select a charger'}</option>
+              {chargers.map((c) => (
+                <option key={c.id} value={c.id}>{c.displayName} ({c.location.code})</option>
               ))}
             </select>
           </FormField>

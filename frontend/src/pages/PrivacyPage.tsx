@@ -4,9 +4,11 @@ import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { Button } from '../components/ui/Button';
 import { ErrorBanner } from '../components/ui/ErrorBanner';
 import { useAuth } from '../hooks/useAuth';
+import { apiClient } from '../services/apiClient';
 
-// MOCK: replace with GET /api/v1/privacy-notice when backend is ready
-const MOCK_PRIVACY_CONTENT = `
+// Privacy notice content matches v1 stored in the database.
+// For a production-ready implementation, this content would be fetched from GET /api/v1/privacy-notice.
+const PRIVACY_CONTENT_V1 = `
 ## Privacy Notice — EV Charging Platform
 
 **Version:** v1 · **Effective:** 1 May 2026
@@ -75,17 +77,27 @@ export function PrivacyPage() {
     setAcknowledging(true);
     setError('');
     try {
-      // MOCK: replace with POST /api/v1/privacy-notice/acknowledge when backend is ready
-      // Real call: await apiClient.post('/privacy-notice/acknowledge', { version: CURRENT_PRIVACY_VERSION });
-      await new Promise((r) => setTimeout(r, 400));
+      // Call POST /api/v1/privacy-notice/acknowledge
+      const res = await apiClient.post<{ id: string; userId: string; version: string; acknowledgedAt: string }>(
+        '/privacy-notice/acknowledge',
+        { version: CURRENT_PRIVACY_VERSION },
+      );
 
       // Update the auth context so RequirePrivacyAck clears immediately without re-login
-      const acknowledgedAt = new Date().toISOString();
-      acknowledgePrivacy(CURRENT_PRIVACY_VERSION, acknowledgedAt);
+      acknowledgePrivacy(res.version, res.acknowledgedAt);
 
       navigate(returnTo);
-    } catch {
-      setError('Failed to acknowledge privacy notice. Please try again.');
+    } catch (err: unknown) {
+      const e = err as Error & { apiError?: { message: string } };
+      // If already acknowledged (409), treat as success — navigate to returnTo
+      if ((e as { apiError?: { errors?: Array<{ code?: string }> } }).apiError?.errors?.some(
+        (x: { code?: string }) => x.code === 'AlreadyAcknowledged',
+      )) {
+        acknowledgePrivacy(CURRENT_PRIVACY_VERSION, new Date().toISOString());
+        navigate(returnTo);
+        return;
+      }
+      setError(e.apiError?.message ?? 'Failed to acknowledge privacy notice. Please try again.');
     } finally {
       setAcknowledging(false);
     }
@@ -113,7 +125,7 @@ export function PrivacyPage() {
 
         {/* Content */}
         <div className="px-6 py-5 prose prose-invert prose-sm max-w-none">
-          <PrivacyContent markdown={MOCK_PRIVACY_CONTENT} />
+          <PrivacyContent markdown={PRIVACY_CONTENT_V1} />
         </div>
 
         {/* CTA */}

@@ -1,66 +1,37 @@
-// MOCK: replace USE_MOCKS=false when backend /auth/login and /auth/me are ready
 import type { LoginRequest, LoginResponse, CurrentUser } from '../types';
-import { mockUsers } from '../mocks/users.mock';
-import { DEMO_ACCOUNTS } from '../hooks/useAuth';
+import { apiClient } from './apiClient';
 
-const USE_MOCKS = true;
-
-async function delay(ms = 300) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
+/**
+ * login — calls POST /api/v1/auth/login.
+ * Returns token + basic user summary (id, email, displayName, role).
+ * Callers must call getMe() separately to get eligibility + privacy data.
+ */
 export async function login(req: LoginRequest): Promise<LoginResponse> {
-  await delay(400);
-  if (USE_MOCKS) {
-    const account = DEMO_ACCOUNTS.find((a) => a.email === req.email);
-    if (!account || req.password !== 'demo-password') {
-      const err = new Error('Invalid email or password.') as Error & {
-        apiError: { message: string; errors: { code: string; message: string }[]; traceId: string };
-      };
-      err.apiError = {
-        message: 'Invalid email or password.',
-        errors: [{ code: 'Unauthenticated', message: 'Invalid email or password.' }],
-        traceId: 'mock-trace-001',
-      };
-      throw err;
-    }
-    // Store a fake token
-    localStorage.setItem('nexlevel_token', 'mock-jwt-token');
-    return {
-      token: 'mock-jwt-token',
-      expiresAt: '2026-05-24T08:00:00Z',
-      user: {
-        id: account.user.id,
-        email: account.user.email,
-        displayName: account.user.displayName,
-        role: account.user.role,
-      },
-    };
-  }
-  // Real API call when backend is ready
-  const { apiClient } = await import('./apiClient');
-  return apiClient.post<LoginResponse>('/auth/login', req);
+  const res = await apiClient.post<LoginResponse>('/auth/login', req);
+  // Persist the JWT for subsequent requests
+  localStorage.setItem('nexlevel_token', res.token);
+  return res;
 }
 
+/**
+ * logout — calls POST /api/v1/auth/logout (audit log) then clears local storage.
+ * Non-fatal if the API call fails — we clear local state regardless.
+ */
 export async function logout(): Promise<void> {
-  await delay(100);
-  localStorage.removeItem('nexlevel_token');
-  if (!USE_MOCKS) {
-    const { apiClient } = await import('./apiClient');
+  try {
     await apiClient.post('/auth/logout');
+  } catch {
+    // Silently swallow — logout should always clear local state
+  } finally {
+    localStorage.removeItem('nexlevel_token');
+    localStorage.removeItem('nexlevel_user');
   }
 }
 
+/**
+ * getMe — calls GET /api/v1/auth/me.
+ * Returns full CurrentUser including eligibility and privacy sub-objects.
+ */
 export async function getMe(): Promise<CurrentUser> {
-  await delay(200);
-  if (USE_MOCKS) {
-    // Return the stored user from localStorage (set by useAuth login)
-    const raw = localStorage.getItem('nexlevel_user');
-    if (!raw) throw new Error('Not authenticated');
-    return JSON.parse(raw) as CurrentUser;
-  }
-  const { apiClient } = await import('./apiClient');
   return apiClient.get<CurrentUser>('/auth/me');
 }
-
-export { mockUsers };
