@@ -10,10 +10,11 @@ import {
   ClockIcon,
   BellAlertIcon,
 } from '@heroicons/react/24/outline';
-import type { Booking, Charger, ChargerStatus } from '../types';
+import type { Booking, Charger, ChargerStatus, OcppStation, OcppSession } from '../types';
 import { getChargers } from '../services/charger.service';
 import { getBookings } from '../services/booking.service';
 import { getReportSummary } from '../services/report.service';
+import { getOcppStations, getOcppActiveSessions } from '../services/ocpp.service';
 import { StatCard } from '../components/ui/StatCard';
 import { InsightCard } from '../components/ui/InsightCard';
 import { SustainabilityCard } from '../components/ui/SustainabilityCard';
@@ -56,6 +57,9 @@ export function DashboardPage() {
   const [co2Saved, setCo2Saved] = useState<number>(0);
   const [totalKwh, setTotalKwh] = useState<number>(0);
   const [emissionFactor, setEmissionFactor] = useState<number>(0.85);
+  const [ocppStations, setOcppStations] = useState<OcppStation[] | null>(null);
+  const [ocppActiveSessions, setOcppActiveSessions] = useState<OcppSession[] | null>(null);
+  const [ocppError, setOcppError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,7 +68,9 @@ export function DashboardPage() {
       getChargers().catch(() => ({ data: [] as Charger[] })),
       getBookings({ limit: 100 }).catch(() => ({ data: [] as Booking[], pagination: { page: 1, limit: 100, total: 0, totalPages: 1 } })),
       getReportSummary().catch(() => null),
-    ]).then(([c, b, s]) => {
+      getOcppStations().catch(() => null),
+      getOcppActiveSessions().catch(() => null),
+    ]).then(([c, b, s, stations, activeSessions]) => {
       if (cancelled) return;
       setChargers(c.data);
       setBookings(b.data);
@@ -72,6 +78,12 @@ export function DashboardPage() {
         setCo2Saved(s.data.estimatedCo2SavingsKg);
         setTotalKwh(s.data.totalKwh);
         setEmissionFactor(s.data.emissionFactorUsed);
+      }
+      if (stations !== null) {
+        setOcppStations(stations);
+        setOcppActiveSessions(activeSessions ?? []);
+      } else {
+        setOcppError(true);
       }
       setLoading(false);
     });
@@ -204,6 +216,35 @@ export function DashboardPage() {
           hint={`Factor ${emissionFactor} kg/kWh`}
           trend={{ direction: 'up', label: 'Tracking ESG goal' }}
         />
+      </section>
+
+      {/* ── OCPP Simulator live stats ─────────────────── */}
+      <section aria-label="OCPP Simulator" className="bg-brand-800 rounded-card p-5 border border-brand-700/50 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <span className={cn('h-2.5 w-2.5 rounded-full', ocppError ? 'bg-red-400' : 'bg-emerald-400')} aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-white">OCPP Simulator</h2>
+          <span className="text-xs text-gray-400">{ocppError ? 'Unreachable — localhost:3000' : 'localhost:3000'}</span>
+        </div>
+        {ocppError ? (
+          <p className="text-xs text-red-400">Could not reach the OCPP simulator. Make sure it is running on <code className="font-mono">http://localhost:3000/api/</code>.</p>
+        ) : ocppStations !== null ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <OcppStatTile label="Total stations" value={ocppStations.length} />
+            <OcppStatTile label="Connected" value={ocppStations.filter(s => s.connected).length} accent="green" />
+            <OcppStatTile label="Active sessions" value={ocppActiveSessions?.length ?? 0} accent="violet" />
+            <OcppStatTile
+              label="Energy (active)"
+              value={`${((ocppActiveSessions ?? []).reduce((sum, s) => sum + (s.energy_wh ?? 0), 0) / 1000).toFixed(2)} kWh`}
+              accent="blue"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-14 rounded-lg bg-brand-700/30 skeleton" />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Main 2-column grid ───────────────────────── */}
@@ -381,5 +422,31 @@ function NoUpcomingCard({ onBook }: { onBook: () => void }) {
         </Button>
       </div>
     </section>
+  );
+}
+
+type TileAccent = 'green' | 'violet' | 'blue' | 'default';
+
+const TILE_VALUE_CLASS: Record<TileAccent, string> = {
+  green:   'text-emerald-400',
+  violet:  'text-violet-400',
+  blue:    'text-brand-300',
+  default: 'text-white',
+};
+
+function OcppStatTile({
+  label,
+  value,
+  accent = 'default',
+}: {
+  label: string;
+  value: string | number;
+  accent?: TileAccent;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5 rounded-lg bg-brand-700/30 border border-brand-700/40 px-3 py-2.5">
+      <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">{label}</span>
+      <span className={cn('text-xl font-bold tabular-nums', TILE_VALUE_CLASS[accent])}>{value}</span>
+    </div>
   );
 }
