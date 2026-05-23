@@ -69,6 +69,7 @@ export function BookingNewPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
+  const [existingBookingId, setExistingBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
 
@@ -142,6 +143,7 @@ export function BookingNewPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
+    setExistingBookingId(null);
     if (!validate()) return;
 
     setLoading(true);
@@ -161,12 +163,15 @@ export function BookingNewPage() {
       });
       setConfirmedBooking(booking);
     } catch (err: unknown) {
-      const e = err as Error & { apiError?: { message: string; errors: { field?: string; code: string; message: string }[] } };
+      const e = err as Error & { apiError?: { message: string; errors: { field?: string; code: string; message: string; metadata?: Record<string, string> }[] } };
       if (e.apiError) {
         const fieldErrors: Record<string, string> = {};
         let formMsg = e.apiError.message;
         e.apiError.errors.forEach((fe) => {
-          if (fe.code === 'DailyCapExceeded') {
+          if (fe.code === 'AlreadyHasActiveBooking') {
+            formMsg = 'You already have a booking during this time window. Cancel it or choose a different time.';
+            setExistingBookingId(fe.metadata?.bookingId ?? null);
+          } else if (fe.code === 'DailyCapExceeded') {
             formMsg = 'You have already used your 1-hour daily cap. Enable "Override daily cap" with a reason if you are authorised to exceed it.';
           } else if (fe.field) {
             fieldErrors[fe.field] = fe.message;
@@ -247,8 +252,40 @@ export function BookingNewPage() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="px-6 py-5 space-y-5">
-          {formError && (
+          {formError && !existingBookingId && (
             <ErrorBanner message={formError} dismissable onRetry={() => setFormError('')} />
+          )}
+          {formError && existingBookingId && (
+            <div className="flex items-start gap-3 rounded-lg border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+              <ExclamationTriangleIcon className="h-5 w-5 shrink-0 mt-0.5 text-red-400" aria-hidden="true" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-red-200">Active booking already exists</p>
+                <p className="mt-0.5 text-red-300">{formError}</p>
+                <div className="mt-2 flex gap-2">
+                  <Link
+                    to={`/my-bookings/${existingBookingId}`}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-red-200 underline hover:text-white"
+                  >
+                    View booking
+                  </Link>
+                  <span className="text-red-600">·</span>
+                  <Link
+                    to="/my-bookings"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-red-200 underline hover:text-white"
+                  >
+                    My bookings
+                  </Link>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setFormError(''); setExistingBookingId(null); }}
+                className="shrink-0 text-red-400 hover:text-red-200"
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
           )}
 
           {/* Fair-use callout */}
