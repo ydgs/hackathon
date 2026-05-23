@@ -2,7 +2,7 @@
  * Fetch wrapper — base URL, JSON error envelope handling.
  * Matches api-conventions.md error shape.
  *
- * In development, Vite proxies /api/* to http://localhost:5000/api/*
+ * In development, Vite proxies /api/* to https://localhost:7000/api/*
  * so we use a relative path here. This also works in production when
  * the frontend and backend are served from the same origin.
  */
