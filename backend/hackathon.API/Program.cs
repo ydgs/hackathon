@@ -62,9 +62,11 @@ builder.Services.AddHttpClient<ICsmsClient, CsmsClient>(client =>
 });
 
 // ── Application Services ──────────────────────────────────────────────────
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IChargerService, ChargerService>();
 
 // ── Background Services (P1) ──────────────────────────────────────────────
 // SessionSyncService: polls CSMS every 30s to sync active sessions into local DB
