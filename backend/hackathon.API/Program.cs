@@ -44,22 +44,33 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:5173",
-            "http://localhost:3000"  // allow local testing from other origins during dev
-        )
+        // Allow any localhost port so Vite auto-increments (5173, 5174, 5175…) don't break the app
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+            return false;
+        })
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
 });
 
 // ── CSMS HTTP Client ──────────────────────────────────────────────────────
-var csmsBaseUrl = builder.Configuration["Csms:BaseUrl"] ?? "http://localhost:3000";
-builder.Services.AddHttpClient<ICsmsClient, CsmsClient>(client =>
+var csmsMockMode = builder.Configuration.GetValue<bool>("Csms:MockMode");
+if (csmsMockMode)
 {
-    client.BaseAddress = new Uri(csmsBaseUrl);
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
+    builder.Services.AddSingleton<ICsmsClient, MockCsmsClient>();
+}
+else
+{
+    var csmsBaseUrl = builder.Configuration["Csms:BaseUrl"] ?? "http://localhost:3000";
+    builder.Services.AddHttpClient<ICsmsClient, CsmsClient>(client =>
+    {
+        client.BaseAddress = new Uri(csmsBaseUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+    });
+}
 
 // ── Application Services ──────────────────────────────────────────────────
 builder.Services.AddMemoryCache();

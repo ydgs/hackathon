@@ -224,6 +224,25 @@ public class CsmsClient : ICsmsClient
     };
 }
 
+/// <summary>
+/// No-op CSMS client used when Csms:MockMode = true.
+/// All write operations succeed instantly; reads return empty collections.
+/// </summary>
+public class MockCsmsClient : ICsmsClient
+{
+    public Task<bool> AuthorizeTagAsync(string idTag, DateTime validFrom, DateTime validTo) => Task.FromResult(true);
+    public Task<bool> RevokeTagAsync(string idTag) => Task.FromResult(true);
+    public Task<List<CsmsStation>> GetStationsAsync() => Task.FromResult(new List<CsmsStation>());
+    public Task<CsmsStation?> GetStationAsync(string identity) => Task.FromResult<CsmsStation?>(null);
+    public Task<List<CsmsSession>> GetActiveSessionsAsync() => Task.FromResult(new List<CsmsSession>());
+    public Task<List<CsmsSession>> GetSessionsAsync(string? stationId = null, string? idTag = null) => Task.FromResult(new List<CsmsSession>());
+    public Task<CsmsSession?> GetSessionAsync(string sessionId) => Task.FromResult<CsmsSession?>(null);
+    public Task<bool> BlockConnectorAsync(string stationId, int connectorId) => Task.FromResult(true);
+    public Task<bool> UnblockConnectorAsync(string stationId, int connectorId) => Task.FromResult(true);
+    public Task<bool> RemoteStartAsync(string stationId, string idTag) => Task.FromResult(true);
+    public Task<bool> RemoteStopAsync(string stationId, string transactionId) => Task.FromResult(true);
+}
+
 // CSMS response shapes (normalized from NexLevel CSMS REST API)
 public class CsmsStation
 {

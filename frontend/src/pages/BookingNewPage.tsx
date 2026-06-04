@@ -73,11 +73,12 @@ export function BookingNewPage() {
   const [loading, setLoading] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
 
-  // Load available chargers
+  // Load bookable chargers — exclude physically broken/blocked ones.
+  // Reserved chargers may still be bookable for other time slots; the backend handles overlap checks.
   useEffect(() => {
     getChargers()
       .then((res) => {
-        setChargers(res.data.filter((c) => c.status === 'Available'));
+        setChargers(res.data.filter((c) => c.status !== 'BlockedForMaintenance' && c.status !== 'Faulted' && c.status !== 'Unavailable'));
       })
       .finally(() => setChargersLoading(false));
   }, []);
@@ -316,7 +317,7 @@ export function BookingNewPage() {
               </option>
               {chargers.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.displayName} ({c.location.name}) — Available
+                  {c.displayName} ({c.location.name}){c.status === 'Reserved' ? ' — Partially booked' : ' — Available'}
                 </option>
               ))}
             </select>
