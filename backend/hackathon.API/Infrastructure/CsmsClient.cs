@@ -14,6 +14,7 @@ public interface ICsmsClient
     Task<bool> RevokeTagAsync(string idTag);
     Task<List<CsmsStation>> GetStationsAsync();
     Task<CsmsStation?> GetStationAsync(string identity);
+    Task<List<CsmsConnector>> GetConnectorsAsync(string stationIdentity);
     Task<List<CsmsSession>> GetActiveSessionsAsync();
     Task<List<CsmsSession>> GetSessionsAsync(string? stationId = null, string? idTag = null);
     Task<CsmsSession?> GetSessionAsync(string sessionId);
@@ -98,6 +99,45 @@ public class CsmsClient : ICsmsClient
         {
             _logger.LogWarning(ex, "CSMS GetStation failed for {Identity}", identity);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Fetches the connector list for a station from the CSMS.
+    /// Maps to GET /api/stations/:identity/connectors.
+    /// Falls back to GET /api/stations/:identity and extracts connectors if the dedicated endpoint
+    /// is unavailable (non-2xx), so the check works against both CSMS versions.
+    /// On any exception, returns an empty list — the caller must treat an empty list as
+    /// "check skipped" rather than "connector unavailable".
+    /// </summary>
+    public async Task<List<CsmsConnector>> GetConnectorsAsync(string stationIdentity)
+    {
+        try
+        {
+            var response = await _http.GetAsync(
+                $"/api/stations/{Uri.EscapeDataString(stationIdentity)}/connectors");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var connectors = JsonSerializer.Deserialize<List<CsmsConnector>>(content, JsonOptions);
+                return connectors ?? new List<CsmsConnector>();
+            }
+
+            // Dedicated endpoint not available — fall back to full station response
+            _logger.LogWarning(
+                "CSMS GET /api/stations/{StationIdentity}/connectors returned {StatusCode}; " +
+                "falling back to GetStationAsync to extract connectors.",
+                stationIdentity, (int)response.StatusCode);
+
+            var station = await GetStationAsync(stationIdentity);
+            return station?.Connectors ?? new List<CsmsConnector>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "CSMS GetConnectors failed for station {StationIdentity}; " +
+                "availability check skipped and booking will proceed.", stationIdentity);
+            return new List<CsmsConnector>();
         }
     }
 
@@ -234,6 +274,11 @@ public class MockCsmsClient : ICsmsClient
     public Task<bool> RevokeTagAsync(string idTag) => Task.FromResult(true);
     public Task<List<CsmsStation>> GetStationsAsync() => Task.FromResult(new List<CsmsStation>());
     public Task<CsmsStation?> GetStationAsync(string identity) => Task.FromResult<CsmsStation?>(null);
+    /// <summary>
+    /// MockMode: connector availability check is skipped — returns empty list so
+    /// BookingService treats the check as not applicable and allows the booking to proceed.
+    /// </summary>
+    public Task<List<CsmsConnector>> GetConnectorsAsync(string stationIdentity) => Task.FromResult(new List<CsmsConnector>());
     public Task<List<CsmsSession>> GetActiveSessionsAsync() => Task.FromResult(new List<CsmsSession>());
     public Task<List<CsmsSession>> GetSessionsAsync(string? stationId = null, string? idTag = null) => Task.FromResult(new List<CsmsSession>());
     public Task<CsmsSession?> GetSessionAsync(string sessionId) => Task.FromResult<CsmsSession?>(null);

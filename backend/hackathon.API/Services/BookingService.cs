@@ -147,6 +147,43 @@ public class BookingService : IBookingService
 
         if (maintenanceConflict) return (null, Error(409, "Charger is blocked for maintenance during this window.", "MaintenanceBlockConflict"), 409);
 
+        // Validation 10: live CSMS connector availability check (US-107)
+        // If the CSMS reports the connector as Faulted or Unavailable, reject the booking.
+        // On any CSMS communication failure, log a warning and allow the booking to proceed —
+        // CSMS unavailability must never block bookings.
+        // This check is automatically skipped when MockMode=true because MockCsmsClient.GetConnectorsAsync
+        // returns an empty list, which the logic below treats as "no data — proceed".
+        try
+        {
+            var csmsConnectors = await _csms.GetConnectorsAsync(charger.ExternalStationId);
+            if (csmsConnectors.Count > 0)
+            {
+                var matchedConnector = csmsConnectors
+                    .FirstOrDefault(c => c.ConnectorId == charger.ConnectorId);
+
+                if (matchedConnector != null &&
+                    (matchedConnector.Status.Equals("Faulted", StringComparison.OrdinalIgnoreCase) ||
+                     matchedConnector.Status.Equals("Unavailable", StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogInformation(
+                        "Booking rejected: CSMS reports connector {ConnectorId} on station {StationId} as {Status}",
+                        charger.ConnectorId, charger.ExternalStationId, matchedConnector.Status);
+
+                    return (null, Error(409,
+                        "Charger is not available for booking at this time.",
+                        "ChargerCurrentlyUnavailable"), 409);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // CSMS unavailability must not block bookings — log warning and proceed
+            _logger.LogWarning(ex,
+                "CSMS connector availability check failed for station {StationId} connector {ConnectorId}; " +
+                "check skipped and booking will proceed.",
+                charger.ExternalStationId, charger.ConnectorId);
+        }
+
         // Derive CSMS idTag from badgeId + booking prefix
         var idTag = $"{eligibleUser.BadgeId}-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
 
